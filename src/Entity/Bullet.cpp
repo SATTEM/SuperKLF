@@ -12,14 +12,9 @@ const bool isOutOfScreen(const Vector2& pos);
 
 Bullet::Bullet(const std::string texPath,const Vector2& vel,const Vector2& pos,const int dmg,const bool act)
 	:position(pos),velocity(vel),active(act),colliderRadius(BULLET::BULLET_RADIUS),damage(dmg){
-		Texture2D originTex=ResourceManager::Get().loadTexture(texPath);
-		Image img=LoadImageFromTexture(originTex);
-		//把图片变成固定大小
-		ImageResize(&img, BULLET::BULLET_WIDTH, BULLET::BULLET_HEIGHT);
-		std::string processedPath=texPath+"_processed";
-		ResourceManager::Get().getTextures()[processedPath]=LoadTextureFromImage(img);
-		texture=ResourceManager::Get().loadTexture(processedPath);
-		UnloadImage(img);
+		Texture2D origin=ResourceManager::Get().loadTexture(texPath);
+		ResourceManager::Get().resizeTexture(texPath, BULLET::BULLET_WIDTH, BULLET::BULLET_HEIGHT);
+		texture=ResourceManager::Get().loadTexture(texPath);
 	}
 
 std::unique_ptr<Bullet> Bullet::shoot(const Vector2& begin){

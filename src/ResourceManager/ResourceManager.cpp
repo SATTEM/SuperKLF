@@ -47,14 +47,7 @@ void ResourceManager::unloadTexture(const std::string path){
 
 void ResourceManager::cleanUp(){
 	for(auto& [path,tex]:textures){
-		if(path.find("_processed")==std::string::npos){
-			UnloadTexture(tex);
-		}
-	}
-	for(auto& [path,tex]:textures){
-		if(path.find("_processed")!=std::string::npos){
-			UnloadTexture(tex);
-		}
+		UnloadTexture(tex);
 	}
 	textures.clear();
 	TraceLog(LOG_INFO, "[RES] All resources released");

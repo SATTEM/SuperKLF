@@ -23,7 +23,6 @@ int main(void){
 	enemy->addBullet({ASSETS_PATH "pen.png"});
 	SetTargetFPS(180);
 	while(!WindowShouldClose()){
-		
 		float deltaTime =GetFrameTime();
 		player->Update(*enemy,deltaTime);
 		enemy->Update(*player,deltaTime);
