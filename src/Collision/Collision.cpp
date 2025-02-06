@@ -3,13 +3,14 @@
 extern "C"{
 	#include <raylib.h>
 }
-
 using std::clamp;
 
 bool Collision::checkBulletEntity(const Bullet &aBullet, const Entity &aEntity){
 	Vector2 bulletCentre=aBullet.getColliderCentre();
 	float bulletRadiu=aBullet.getColliderRadius();
+
 	Rectangle entityBox=aEntity.getCollider();
+
 	//计算矩形边界点与圆心最近的距离
 	float closestX=clamp(bulletCentre.x,entityBox.x,entityBox.x+entityBox.width);
 	float closestY=clamp(bulletCentre.y,entityBox.y,entityBox.y+entityBox.height);

@@ -19,9 +19,8 @@ public:
 		static ResourceManager instance;
 		return instance;
 	}
-	void resizeTexture(const std::string path,const int width,const int height);
+	std::string resizeTexture(const std::string path,const int width,const int height);
 	const Texture2D& loadTexture(const std::string path);
-	void registerTexture(const std::string& key,const Texture2D& tex);
 	std::unordered_map<std::string, Texture2D>& getTextures(){return textures;}
 	void unloadTexture(const std::string path);
 	void cleanUp();

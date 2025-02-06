@@ -7,9 +7,9 @@ extern "C"{
 	#include "raylib.h"
 }
 
-void updateBulletPool(std::vector<std::unique_ptr<Bullet>>& pool,const float deltaTime,Entity& aEntity);
+void updateBulletPool(std::vector<std::unique_ptr<Bullet>>& pool,const float deltaTime,Entity& shooter);
 void tryFire(Entity& aEntity,const float deltaTime);
-void updateCollision(std::vector<std::unique_ptr<Bullet>>& pool,const float deltaTime,Entity& aEntity);
+void updateCollision(std::vector<std::unique_ptr<Bullet>>& pool,const float deltaTime,Entity& shooter);
 
 Entity::Entity(const std::string texPath,const Vector2& pos,const int hp,const float interval,const int MAXenergy,const int rise,const std::vector<Bullet>& pattern)
 		:position(pos),maxHP(hp),attackInterval(interval),
@@ -25,7 +25,7 @@ Entity::Entity(const std::string texPath,const Vector2& pos,const int hp,const f
 			boxCollider={position.x,position.y,(float)texture.width,(float)texture.height};
 		 }
 
-void Entity::fireBullet(Vector2 pos){
+void Entity::fire(Vector2 pos){
 	if(bulletPattern.empty()){
 		return;
 	}
@@ -34,12 +34,17 @@ void Entity::fireBullet(Vector2 pos){
 		pos.y=position.y;
 	}
 	bulletPool.push_back(bulletPattern[bulletIndex].shoot(pos));
-	addEnergy(energyRise);
 	bulletIndex=(bulletIndex+1) % bulletPattern.size();
+	addEnergy(energyRise);
 }
-void Player::Update(Entity& opponent,const float deltaTime){
+void Entity::fireBlast(){
+	bulletPool.push_back(blast.shoot(position));
+	resetEnergy();
+}
+
+void Player::Update(const float deltaTime){
 	tryFire(*this, deltaTime);
-	updateBulletPool(bulletPool, deltaTime,opponent);
+	updateBulletPool(bulletPool, deltaTime,*this);
 }
 void Player::Draw() const {
 	DrawTextureV(texture,position,WHITE);
@@ -52,9 +57,34 @@ void Player::drawHPandEnergy() const{
 	DrawRectangleLines(int(GetScreenWidth()/2), GetScreenHeight()-40, int(GetScreenWidth()/2), 40, BLACK);
 	DrawRectangle(int(GetScreenWidth()/2), GetScreenHeight()-40, int((float(energy)/maxEnergy)*(float(GetScreenWidth())/2)), 40, ORANGE);	
 }
-void Enemy::Update(Entity& opponent,const float deltaTime){
+void Enemy::Update(const float deltaTime){
 	tryFire(*this, deltaTime);
-	updateBulletPool(bulletPool, deltaTime,opponent);
+	updateBulletPool(bulletPool, deltaTime,*this);
+}
+void tryFire(Entity& shooter,const float deltaTime){
+	float& attackTimer=shooter.getAttackTimer();
+	float& attackInterval=shooter.getAttackInterVale();
+	attackTimer+=deltaTime;
+	if(shooter.getEnergy()==shooter.getMaxEnergy()){
+		shooter.fireBlast();
+	}	
+	if(attackTimer>=attackInterval){
+		shooter.fire();
+		attackTimer=0;
+		shooter.addEnergy(shooter.getEnergyRise());
+	}
+
+}
+
+void updateBulletPool(std::vector<std::unique_ptr<Bullet>>& pool,const float deltaTime,Entity& shooter){
+	for(auto it=pool.begin();it!=pool.end();){
+		(*it)->Update(deltaTime,shooter);
+		if((*it)->shouldBeRemoved()){
+			it=pool.erase(it);
+		}else{
+			++it;
+		}
+	}	
 }
 void Enemy::Draw() const {
 	DrawTextureV(texture,position,WHITE);
@@ -68,28 +98,3 @@ void Enemy::drawHPandEnergy() const{
 	DrawRectangle(int(GetScreenWidth()/2), 0, int((float(energy)/maxEnergy)*(float(GetScreenWidth())/2)), 40, ORANGE);	
 }
 
-void tryFire(Entity& aEntity,const float deltaTime){
-	float& attackTimer=aEntity.getAttackTimer();
-	float& attackInterval=aEntity.getAttackInterVale();
-	attackTimer+=deltaTime;
-	if(attackTimer>=attackInterval){
-		aEntity.fireBullet();
-		attackTimer=0;
-		aEntity.addEnergy(aEntity.getEnergyRise());
-	}	
-}
-
-void updateBulletPool(std::vector<std::unique_ptr<Bullet>>& pool,const float deltaTime,Entity& aEntity){
-	updateCollision(pool, deltaTime,aEntity);
-}
-
-void updateCollision(std::vector<std::unique_ptr<Bullet>>& pool,const float deltaTime,Entity& aEntity){
-	for(auto it=pool.begin();it!=pool.end();){
-		(*it)->Update(deltaTime,aEntity);
-		if((*it)->shouldBeRemoved()){
-			it=pool.erase(it);
-		}else{
-			++it;
-		}
-	}	
-}

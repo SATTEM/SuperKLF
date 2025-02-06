@@ -1,3 +1,4 @@
+#include <string>
 extern "C"{
 	#include "raylib.h"
 }
@@ -22,19 +23,17 @@ const Texture2D& ResourceManager::loadTexture(const std::string path){
 	return textures[path];
 }
 
-void ResourceManager::registerTexture(const std::string& key,const Texture2D& tex){
-	if(textures.find(key)==textures.end()){
-		textures[key]=tex;
-	}
-}
 
-void ResourceManager::resizeTexture(const std::string path,const int width,const int height){
-	if(textures.find(path)!=textures.end()){
-		Image img=LoadImageFromTexture(textures[path]);
-		ImageResize(&img, width, height);
-		textures[path]=LoadTextureFromImage(img);
-		UnloadImage(img);
-	}
+std::string ResourceManager::resizeTexture(const std::string path,const int width,const int height){
+	if(textures.find(path)==textures.end()){return "";}
+	static int ID=0;
+	Image img=LoadImageFromTexture(textures[path]);
+	ImageResize(&img,width,height);
+	std::string processedPath=path+"_porcessed"+std::to_string(ID);
+	textures[processedPath]=LoadTextureFromImage(img);
+	UnloadImage(img);
+	ID++;
+	return processedPath;
 }
 
 void ResourceManager::unloadTexture(const std::string path){

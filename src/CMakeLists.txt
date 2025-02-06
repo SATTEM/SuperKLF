@@ -10,5 +10,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE raylib)
 target_link_libraries(${PROJECT_NAME} PRIVATE Entity)
 target_link_libraries(${PROJECT_NAME} PRIVATE Collision)
 target_link_libraries(${PROJECT_NAME} PRIVATE ResourceManager)
+target_link_libraries(${PROJECT_NAME} PRIVATE SpecialEffect)
 
 target_link_directories(${PROJECT_NAME} PRIVATE ${LIBPATH})
