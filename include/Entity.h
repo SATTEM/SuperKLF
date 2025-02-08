@@ -1,9 +1,9 @@
 #ifndef ENTITY_H
 #define ENTITY_H
-#include <utility>
 extern "C"{
 	#include "raylib.h"
 }
+#include <utility>
 #include <vector>
 #include <algorithm>
 #include <memory>
@@ -33,15 +33,14 @@ public:
 	virtual void drawHPandEnergy() const=0;
 	void fire(Vector2 pos={0,0});
 	void fireBlast();
-	void takeDamage(const int damage){
-		currentHP=std::max(0,currentHP-damage);
-	}
-	bool isAlive() const {return currentHP>=0;}
+	void takeDamage(const int damage){currentHP=std::max(0,currentHP-damage);}
+	bool isAlive() const {return currentHP>0;}
 	bool canCastSkill() const{return energy>=maxEnergy;}
 	void addEnergy(const int value){
 		energy=std::clamp(energy+value,0,maxEnergy);
 	}
 	void resetEnergy(){energy=0;}
+	void reset();
 	void addBullet(Bullet aBullet){bulletPattern.push_back(std::move(aBullet));}
 	void removeBullet(const int index){bulletPattern.erase(bulletPattern.begin()+index);}
 	void setBlast(Blast aBlast){blast=std::move(aBlast);}

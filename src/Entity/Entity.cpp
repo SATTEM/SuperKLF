@@ -24,7 +24,12 @@ Entity::Entity(const std::string texPath,const Vector2& pos,const int hp,const f
 			}
 			boxCollider={position.x,position.y,(float)texture.width,(float)texture.height};
 		 }
-
+void Entity::reset(){
+	currentHP=maxHP;
+	energy=0;
+	bulletIndex=0;
+	bulletPool.clear();
+}
 void Entity::fire(Vector2 pos){
 	if(bulletPattern.empty()){
 		return;

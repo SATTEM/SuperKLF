@@ -1,7 +1,7 @@
 #ifndef SPECIALEFFECT_H
 #define SPECIALEFFECT_H
 #include "Entity.h"
-#include "GameStage.h"
+#include "GameStageFwd.h"
 
 class BulletEffectFactory{
 

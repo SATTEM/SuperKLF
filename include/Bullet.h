@@ -6,7 +6,7 @@ extern "C"{
 }
 #include <memory>
 #include <string>
-#include "GameStage.h"
+#include "GameStageFwd.h"
 
 class Entity;
 class BulletEffect;

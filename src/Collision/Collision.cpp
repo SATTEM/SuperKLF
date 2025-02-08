@@ -22,3 +22,6 @@ bool Collision::checkBulletEntity(const Bullet &aBullet, const Entity &aEntity){
 bool Collision::checkEntityEntity(const Entity &a, const Entity &b){
 	return CheckCollisionRecs(a.getCollider(), b.getCollider());
 }
+bool Collision::checkIsTouchButton(const Button &aButton){
+	return CheckCollisionPointRec(GetMousePosition(), aButton.getRect());
+}
