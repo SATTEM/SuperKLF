@@ -9,7 +9,9 @@ extern "C"{
 #include <memory>
 #include <string>
 #include "Bullet.h"
-
+namespace GameInit{
+	const int Start_Money=33;
+}
 class Entity{
 protected:
 	Vector2 position;
@@ -57,6 +59,8 @@ public:
 };
 
 class Player:public Entity{
+private:
+	int money=GameInit::Start_Money;
 public:
 	Player(const std::string texPath,const Vector2& pos,const int hp=100
 	,const float interval=1,const int MAXenergy=100,const int rise=10)
@@ -64,6 +68,15 @@ public:
 	void Update(const float deltaTime) override;
 	void Draw() const override;
 	void drawHPandEnergy() const override;
+	void setAttackInterval(const float rate){attackInterval*=rate;}
+	void MaxHealthBoost(const int val){maxHP+=val;}
+	void MaxHealthBoost(const float rate){maxHP*=rate;}
+	void addMoney(const int value){money+=value;}
+	const bool deductMoney(const int value){
+		if(money-value<0){return false;}
+		else{money-=value;return true;}
+	}
+	const int getMoney() const{return money;}
 };
 
 class Enemy:public Entity{

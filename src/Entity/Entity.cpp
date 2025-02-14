@@ -20,7 +20,7 @@ Entity::Entity(const std::string texPath,const Vector2& pos,const int hp,const f
 			if(!IsTextureValid(texture)){
 				//当加载不成功时，使用临时图标
 				TraceLog(LOG_WARNING, "Using fallback texture for: %s",texPath.c_str());
-				texture=ResourceManager::Get().loadTexture(ASSETS_PATH "/fallback.png");
+				texture=ResourceManager::Get().loadTexture(ASSETS_IMAGE_PATH "/fallback.png");
 			}
 			boxCollider={position.x,position.y,(float)texture.width,(float)texture.height};
 		 }

@@ -5,35 +5,54 @@
 ├── include
 │   ├── Bullet.h
 │   ├── Collision.h
+│   ├── DataManager.h
+│   ├── Effect
+│   │   ├── BulletEffect.h
+│   │   ├── EffectFactories.h
+│   │   ├── EffectRegistry.h
+│   │   ├── InstantEffect.h
+│   │   └── RelicEffect.h
 │   ├── Entity.h
 │   ├── GameStageFwd.h
 │   ├── GameStage.h
+│   ├── nlohmann
+│   │   ├── json_fwd.hpp
+│   │   └── json.hpp
 │   ├── raylib
 │   │   ├── raylib.h
 │   │   ├── raymath.h
 │   │   ├── rcamera.h
 │   │   └── rlgl.h
 │   ├── ResourceManager.h
-│   ├── SpecialEffect.h
+│   ├── RewardSystem.h
+│   ├── UIComponent.h
 │   └── UI.h
 ├── libs
 │   ├── libCollision.a
+│   ├── libData.a
 │   ├── libEntity.a
 │   ├── libGameStage.a
 │   ├── libraylib.so
 │   ├── libResourceManager.a
+│   ├── libRewardSystem.a
 │   ├── libSpecialEffect.a
 │   ├── libStageController.a
-│   └── libUI.a
+│   ├── libUI.a
+│   └── libUIComponent.a
 ├── outline
 ├── res
-│   ├── enemy.png
-│   ├── exit.png
-│   ├── fallback.png
-│   ├── pen.png
-│   ├── player.png
-│   ├── restart.png
-│   └── warning.png
+│   ├── data
+│   │   └── rewards.json
+│   └── image
+│       ├── attack_speed.png
+│       ├── enemy.png
+│       ├── exit.png
+│       ├── fallback.png
+│       ├── health_boost.png
+│       ├── pen.png
+│       ├── player.png
+│       ├── restart.png
+│       └── warning.png
 ├── sourcecode.doc
 └── src
     ├── CMakeLists.txt
@@ -47,20 +66,30 @@
     ├── main.cpp
     ├── Managers
     │   ├── CMakeLists.txt
+    │   ├── Data
+    │   │   ├── CMakeLists.txt
+    │   │   └── DataManager.cpp
     │   ├── GameStage
     │   │   ├── CMakeLists.txt
     │   │   └── GameStage.cpp
     │   └── ResourceManager
     │       ├── CMakeLists.txt
     │       └── ResourceManager.cpp
-    ├── SpecialEffect
+    ├── RewardSystem
     │   ├── CMakeLists.txt
-    │   └── SpecialEffect.cpp
+    │   └── RewardSystem.cpp
+    ├── SpecialEffect
+    │   ├── BulletEffect.cpp
+    │   ├── CMakeLists.txt
+    │   └── InstantEffect.cpp
     └── UI
         ├── CMakeLists.txt
+        ├── UIComponent
+        │   ├── CMakeLists.txt
+        │   └── UIComponent.cpp
         └── UI.cpp
 
-13 directories, 47 files
+20 directories, 69 files
 以下是CMakeLists.txt中的内容：
 #根目录CMakeLists.txt
 cmake_minimum_required(VERSION 3.5.0)
@@ -71,6 +100,8 @@ set(SRC ${PROJECT_SOURCE_DIR}/src)
 set(LIBPATH ${PROJECT_SOURCE_DIR}/libs)
 set(GAMEPATH ${PROJECT_SOURCE_DIR}/bin)
 set(HEADPATH ${PROJECT_SOURCE_DIR}/include)
+#输出clangd要读取的配置
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #可执行文件的输出路径
 set(EXECUTABLE_OUTPUT_PATH ${GAMEPATH})
 #动态库输出路径
@@ -79,16 +110,19 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${LIBPATH})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${LIBPATH})
 file(COPY res DESTINATION ${GAMEPATH}/)
 file(COPY config.json DESTINATION ${GAMEPATH}/)
-add_compile_definitions(ASSETS_PATH="./res/")
+add_compile_definitions(ASSETS_IMAGE_PATH="./res/image/")
+add_compile_definitions(ASSETS_DATA_PATH="./res/data/")
 add_subdirectory(${SRC}/Entity)
 add_subdirectory(${SRC}/Collision)
 add_subdirectory(${SRC}/Managers)
 add_subdirectory(${SRC}/SpecialEffect)
 add_subdirectory(${SRC}/UI)
+add_subdirectory(${SRC}/RewardSystem)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src)
 以下是Bullet.h中的内容：
 #ifndef BULLET_H
 #define BULLET_H
+
 #include <vector>
 extern "C"{
 	#include "raylib.h"
@@ -96,9 +130,10 @@ extern "C"{
 #include <memory>
 #include <string>
 #include "GameStageFwd.h"
+#include "Effect/BulletEffect.h"
 
 class Entity;
-class BulletEffect;
+
 
 namespace BULLET{
 	//子弹
@@ -122,6 +157,7 @@ private:
 	int damage;
 	float colliderRadius;
 	bool active;
+	bool isOnShoot=true;
 	bool shouldRemove=false;
 	std::vector<std::shared_ptr<BulletEffect>> effects;
 
@@ -135,8 +171,8 @@ public:
 	void Draw() const;
 	void Update(const float deltaTime,Entity& shooter);
 	void checkHit(Entity& shooter);
-	void tryTriggerEffects(Entity& shooter,const Occasion& timing) const;
-	void addEffect(std::shared_ptr<BulletEffect> effect){effects.push_back(effect);}
+	void tryTriggerEffects(Entity& shooter,const Occasion& timing);
+	void addEffect(std::shared_ptr<BulletEffect> effect){effects.push_back(std::move(effect));}
 	void setDamage(const int dmg){damage=dmg;}
 	void setDrawScale(const float val){drawScale=val;}
 	void countColliderRadius(const Vector2 size=BULLET::BULLET_SIZE);
@@ -164,7 +200,7 @@ public:
 
 #include "Bullet.h"
 #include "Entity.h"
-#include "UI.h"
+#include "UIComponent.h"
 
 namespace Collision{
 	bool checkBulletEntity(const Bullet& aBullet,const Entity& aEntity);
@@ -174,6 +210,179 @@ namespace Collision{
 
 #endif
 
+以下是DataManager.h中的内容：
+#ifndef DATAMANAGER_H
+#define DATAMANAGER_H
+#include "RewardSystem.h"
+#include <string>
+#include <vector>
+
+namespace DATA {
+	const int BASIC_COINS_EARNED=100;
+	const float BASIC_COINS_RATE=0.15f;
+	const std::string LEVEL_CONFIG_PATH=ASSETS_DATA_PATH "levels.json";
+	const std::string REWARD_CONFIG_PATH=ASSETS_DATA_PATH "rewards.json";
+	const std::string DATA_PATH=ASSETS_DATA_PATH "data.json";
+}
+
+class DataManager{
+private:
+	int passedLevel=0;
+	float rewardRefreshRate=1.f;
+	int rewardRefreshBase=10;
+	int refreshTimes=0;
+	std::vector<Reward> rewards;
+	DataManager();
+	~DataManager()=default;
+public:
+	DataManager(const DataManager&)=delete;
+	void operator=(const DataManager&)=delete;
+	static DataManager& Get(){
+		static DataManager instance;
+		return instance;
+	}	
+	void levelAdvance(){passedLevel+=1;}
+	void refreshTimesAdvance(){refreshTimes+=1;}
+	void setRewardRefreshBase(const int base){rewardRefreshBase=base;}
+	void setRewardRefreshRate(const float rate){rewardRefreshRate=rate;}
+	void resetRefreshTimes(){refreshTimes=0;}
+	void reset(){passedLevel=0;rewardRefreshRate=1.f;rewardRefreshBase=10;refreshTimes=0;}
+	const int getRefreshMoney() const{return refreshTimes*rewardRefreshBase*rewardRefreshRate;}
+	const int getRefreshTimes() const{return refreshTimes;}
+	const int getPassedLevel() const{return passedLevel;}
+	const int getCoinsEarned() const;
+	const Reward& getReward(const int i);
+	const int getRewardSize() const {return rewards.size();}
+};
+#endif
+以下是BulletEffect.h中的内容：
+#ifndef BULLETEFFECT_H
+#define BULLETEFFECT_H
+#include "GameStageFwd.h"
+class Entity;
+class BulletEffect{
+protected:
+	Occasion triggerTime;
+public:
+	BulletEffect(const Occasion time=Occasion::OnHit):triggerTime(time){}
+	virtual void tryTrigger(Entity& shooter,const Occasion& timing)=0;
+};
+class GiveDamage:public BulletEffect{
+private:
+	int damage;
+public:
+	GiveDamage(const int dmg):damage(dmg){triggerTime=Occasion::OnHit;}
+	void tryTrigger(Entity& shooter,const Occasion& timing)override;
+};
+#endif
+以下是EffectFactories.h中的内容：
+#ifndef EFFECTFACTORIES_H
+#define EFFECTFACTORIES_H
+#include "InstantEffect.h"
+#include <memory>
+
+
+class SpeedBoostFactory:public InstantEffectFactory{
+public:
+	std::shared_ptr<InstantEffect> createFromJson(const nlohmann::json& json) override{
+		return std::make_shared<SpeedBoost>(json["rate"].get<float>());
+	}
+};
+class HealthBoostFactory:public InstantEffectFactory{
+public:
+	std::shared_ptr<InstantEffect> createFromJson(const nlohmann::json& json) override{
+		if(json["value"].is_number_integer()){
+			return std::make_shared<HealthBoost>(json["value"].get<int>());
+		}
+		return std::make_shared<HealthBoost>(json["value"].get<float>());
+	}
+};
+
+#endif
+以下是EffectRegistry.h中的内容：
+#ifndef EFFECTREGISTRY_H
+#define EFFECTREGISTRY_H
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include "InstantEffect.h"
+class EffectRegistry{
+private:
+	std::unordered_map<std::string,std::unique_ptr<InstantEffectFactory>> factories;
+	EffectRegistry()=default;
+	~EffectRegistry()=default;
+public:
+	static EffectRegistry& Get(){
+		static EffectRegistry instance;
+		return instance;
+	}
+	void registerFactory(const std::string& type,std::unique_ptr<InstantEffectFactory> factory){
+		factories[type]=std::move(factory);
+	}
+	std::shared_ptr<InstantEffect> createInstantEffect(const std::string& type,const nlohmann::json& json){
+		auto it=factories.find(type);
+		if(it!=factories.end()){
+			return it->second->createFromJson(json);
+		}
+		return nullptr;
+	}
+};
+#endif
+以下是InstantEffect.h中的内容：
+#ifndef INSTANTEFFECT_H
+#define INSTANTEFFECT_H
+#include <variant>
+#include <memory>
+#include "nlohmann/json.hpp"
+
+class Player;
+class InstantEffect{
+public:
+	InstantEffect()=default;
+	virtual void trigger(Player& player)const =0;
+};
+
+class SpeedBoost:public InstantEffect{
+private:
+	float rate;
+public:
+	SpeedBoost(const float r):InstantEffect(){rate=r;}
+	void trigger(Player& player) const override;
+};
+
+class HealthBoost:public InstantEffect{
+private:
+	std::variant<int,float> value;
+public:
+	HealthBoost(const float r):InstantEffect(){value=r;}
+	HealthBoost(const int v):InstantEffect(){value=v;}
+	void trigger(Player& player) const override;
+};
+
+class InstantEffectFactory{
+public:
+	virtual std::shared_ptr<InstantEffect> createFromJson(const nlohmann::json& json)=0;
+	virtual ~InstantEffectFactory();
+};
+#endif
+以下是RelicEffect.h中的内容：
+#ifndef RELICEFFECT_H
+#define RELICEFFECT_H
+#include "Entity.h"
+#include "GameStageFwd.h"
+#include <string>
+
+class RelicEffect{
+protected:
+	bool isActive=false;
+	std::string description;
+public:
+	virtual ~RelicEffect()=default;
+	virtual void onTrigger(const Occasion& timing,Entity& relatedEntity)=0;
+	virtual std::string getDescription() const{return description;}
+};
+
+#endif
 以下是Entity.h中的内容：
 #ifndef ENTITY_H
 #define ENTITY_H
@@ -186,7 +395,9 @@ extern "C"{
 #include <memory>
 #include <string>
 #include "Bullet.h"
-
+namespace GameInit{
+	const int Start_Money=33;
+}
 class Entity{
 protected:
 	Vector2 position;
@@ -234,6 +445,8 @@ public:
 };
 
 class Player:public Entity{
+private:
+	int money=GameInit::Start_Money;
 public:
 	Player(const std::string texPath,const Vector2& pos,const int hp=100
 	,const float interval=1,const int MAXenergy=100,const int rise=10)
@@ -241,6 +454,15 @@ public:
 	void Update(const float deltaTime) override;
 	void Draw() const override;
 	void drawHPandEnergy() const override;
+	void setAttackInterval(const float rate){attackInterval*=rate;}
+	void MaxHealthBoost(const int val){maxHP+=val;}
+	void MaxHealthBoost(const float rate){maxHP*=rate;}
+	void addMoney(const int value){money+=value;}
+	const bool deductMoney(const int value){
+		if(money-value<0){return false;}
+		else{money-=value;return true;}
+	}
+	const int getMoney() const{return money;}
 };
 
 class Enemy:public Entity{
@@ -256,17 +478,24 @@ public:
 以下是GameStageFwd.h中的内容：
 #ifndef GAMESTAGEFWD_H
 #define GAMESTAGEFWD_H
-enum class Occasion{OnShoot,OnHit};
+enum class Occasion{
+	OnShoot,
+	OnHit,
+	Instant,
+	Always,
+	OnBattleStart,
+	OnPlayerHit,
+	OnHPThreshold
+};
 enum class GameStage{MainMenu,Battle,Victory,Defeat,Pause,EXIT};
 enum class EventSignal{IDLE,EXIT,RESTART};
 #endif
 以下是GameStage.h中的内容：
 #ifndef GAMESTAGE_H
 #define GAMESTAGE_H
-
 #include "Entity.h"
 #include "GameStageFwd.h"
-#include <raylib.h>
+
 
 class StageController{
 private:
@@ -276,7 +505,11 @@ private:
 	Enemy* enemy;
 	StageController();
 	~StageController()=default;
-	
+	void battleUpdate();
+	void mainMenuUpdate();
+	void pauseUpdate();
+	void victoryUpdate();
+	void defeatUpdate();	
 public:
 	StageController(const StageController&)=delete;
 	void operator=(const StageController&)=delete;
@@ -286,10 +519,9 @@ public:
 	}
 	void resetGame();
 	void bindEntities(Player& p,Enemy& e){player=&p;enemy=&e;}
-	const GameStage checkBattleStage() const;
+	void update();
 	const GameStage getCurrentStage() const {return currentStage;}
 	void transitionTo(const GameStage stage){currentStage=stage;}
-	void handleDefeatInput();
 };
 
 #endif
@@ -301,10 +533,14 @@ public:
 extern "C"{
 	#include "raylib.h"
 }
-
+namespace UI {
+	const std::string FONT_PATH="";
+}
 class ResourceManager{
 private:
 	std::unordered_map<std::string, Texture2D> textures;
+	Font font;
+	bool isFontAssigned=false;
 	ResourceManager()=default;
 	~ResourceManager()=default;
 public:
@@ -318,74 +554,108 @@ public:
 	std::string resizeTexture(const std::string path,const int width,const int height);
 	const Texture2D& loadTexture(const std::string path);
 	std::unordered_map<std::string, Texture2D>& getTextures(){return textures;}
+	const Font& loadFont();
 	void unloadTexture(const std::string path);
 	void cleanUp();
 };
 
 #endif
-以下是SpecialEffect.h中的内容：
-#ifndef SPECIALEFFECT_H
-#define SPECIALEFFECT_H
-#include "Entity.h"
-#include "GameStageFwd.h"
+以下是RewardSystem.h中的内容：
+#ifndef REWARDSYSTEM_H
+#define REWARDSYSTEM_H
 
-class BulletEffectFactory{
+#include <string>
+#include <memory>
+#include <vector>
+#include "nlohmann/json.hpp"
+#include "Effect/InstantEffect.h"
+extern "C"{
+	#include "raylib.h"
+}
 
+struct Reward{
+	std::string name;
+	std::string description;
+	std::vector<std::shared_ptr<InstantEffect>> effects;
+	Texture2D icon;
+	void getEffects(const nlohmann::json& j);
 };
-
-class BulletEffect{
-protected:
-	Occasion triggerTime;
-public:
-	BulletEffect(const Occasion time=Occasion::OnHit):triggerTime(time){}
-	virtual void tryTrigger(Entity& shooter,const Occasion& timing)=0;
-	const Occasion when() const{return triggerTime;}
-};
-class GiveDamage:public BulletEffect{
-private:
-	int damage;
-public:
-	GiveDamage(int dmg):damage(dmg){triggerTime=Occasion::OnHit;}
-	void tryTrigger(Entity& shooter,const Occasion& timing) override;
-	void setDamage(const int dmg){damage=dmg;}
-};
-
-
 
 #endif
-以下是UI.h中的内容：
-#ifndef UI_H
-#define UI_H
+以下是UIComponent.h中的内容：
+#ifndef UICOMPONENT_H
+#define UICOMPONENT_H
 #include <string>
 extern "C"{
 	#include "raylib.h"
 }
-namespace UI {
+namespace UI{
 	const int BASIC_BUTTON_WIDTH = 200;
 	const int BASIC_BUTTON_HEIGHT = 50;
 	const float WIDTH_RADIO=0.9f;
-	const float HEIGHT_RADIO=0.8f;
-	const int MIN_FONT_SIZE=1;
+	const float HEIGHT_RADIO=0.5f;
+	const int MIN_FONT_SIZE=1;	
 	const int FONTSIZE=40;
-	const Font font= GetFontDefault();
+	const int EXPLAIN_FONTSIZE=15;
+	const float countTextPosX(const std::string& str,const int origin,const int fontSize,const int offset=0);
+	
 }
+
 class Button{
-private:
+protected:
+	bool available=true;
 	Rectangle rect;
 	std::string text;
 	Color color;
 	int fontSize;
 	Vector2 textPos;
+	void resetPosAndSize();
 public:
-	void Draw() const;
+	virtual void Draw() const;
 	const Rectangle& getRect() const{return rect;}
+	void setAvailibility(const bool a){available=a;}
+	void setText(const std::string& str){text=str;resetPosAndSize();}
+	std::string getText()const{return text;}
 	Button()=default;
 	Button(Rectangle r,std::string t,Color c);
 };
+class ButtonWithNumber:public Button{
+private:
+	std::string addition;
+public:
+	ButtonWithNumber()=default;
+	ButtonWithNumber(Rectangle r,std::string t,Color c,std::string a="")
+	:Button(r,t,c),addition(a){}
+	void setAddition(const std::string& str){addition=str;}
+	void Draw() const override;
+};
+class ButtonWithExplain:public Button{
+private:
+	std::string explain;
+	void DrawExplain() const;
+public:
+	ButtonWithExplain()=default;
+	ButtonWithExplain(Rectangle r,std::string t,Color c,std::string e):Button(r,t,c),explain(e){}
+	void setExplain(const std::string& str){explain=str;}
+	void Draw() const override;
+};
+
+#endif
+以下是UI.h中的内容：
+#ifndef UI_H
+#define UI_H
+#include "Entity.h"
+#include "RewardSystem.h"
+#include <vector>
+#include "UIComponent.h"
+extern "C"{
+}
+namespace UI {
+	const int MAX_ENGLISH_EXPLAIN_LINE=24;
+}
 class DefeatUI{
 private:
 	Button restartButton,exitButton;
-	int passLevel=0;
 	DefeatUI();
 	~DefeatUI()=default;
 public:
@@ -395,11 +665,29 @@ public:
 		static DefeatUI instance;
 		return instance;
 	}
-	void reset(){passLevel=0;}
-	void advance(const int val){passLevel+=val;}
 	const Button& getRestartBtn() const{return restartButton;}
 	const Button& getExitBtn() const{return exitButton;}
 	void Draw() const;
+};
+class VictoryUI{
+private:
+	VictoryUI();
+	~VictoryUI()=default;
+	ButtonWithExplain rewardBtn[3];
+	ButtonWithNumber refreshBtn;
+	std::vector<Reward> currentRewards;
+public:
+	VictoryUI(const VictoryUI&)=delete;
+	void operator=(const VictoryUI&)=delete;
+	static VictoryUI& Get(){
+		static VictoryUI instance;
+		return instance;
+	}
+	void Draw() const;
+	void tryGenerateRewards(Player& player);
+	void chooseReward(const int i,Player& player);
+	const Button& getRewardBtn(int i) const{return rewardBtn[i];}
+	const ButtonWithNumber& getRefreshBtn() const{return refreshBtn;}
 };
 
 #endif
@@ -419,7 +707,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ResourceManager)
 target_link_libraries(${PROJECT_NAME} PRIVATE GameStage)
 target_link_libraries(${PROJECT_NAME} PRIVATE SpecialEffect)
 target_link_libraries(${PROJECT_NAME} PRIVATE UI)
-
+target_link_libraries(${PROJECT_NAME} PRIVATE UIComponent)
+target_link_libraries(${PROJECT_NAME} PRIVATE Data)
+target_link_libraries(${PROJECT_NAME} PRIVATE RewardSystem)
 target_link_directories(${PROJECT_NAME} PRIVATE ${LIBPATH})
 以下是CMakeLists.txt中的内容：
 #Collision中的CMakeLists.txt
@@ -460,6 +750,7 @@ bool Collision::checkIsTouchButton(const Button &aButton){
 	return CheckCollisionPointRec(GetMousePosition(), aButton.getRect());
 }
 以下是Bullet.cpp中的内容：
+#include "GameStageFwd.h"
 #include <algorithm>
 #include <memory>
 #include <string>
@@ -471,7 +762,6 @@ extern "C"{
 #include "Entity.h"
 #include "Collision.h"
 #include "ResourceManager.h"
-#include "SpecialEffect.h"
 
 const bool isOutOfScreen(const Vector2& pos);
 
@@ -481,8 +771,7 @@ Bullet::Bullet(const std::string texPath,const Vector2& vel,const Vector2& pos,c
 		texturePath=ResourceManager::Get().resizeTexture(texPath, BULLET::BULLET_SIZE.x, BULLET::BULLET_SIZE.y);
 		texture=ResourceManager::Get().loadTexture(texturePath);
 		countColliderRadius();
-		effects.push_back(std::shared_ptr<BulletEffect>{});
-		effects.back().reset(new GiveDamage(damage));
+		effects.push_back(std::make_shared<GiveDamage>(GiveDamage(damage)));
 	}
 void Bullet::countColliderRadius(const Vector2 size){
 	colliderRadius=drawScale*(std::min(size.x,size.y)/2);
@@ -498,14 +787,17 @@ Bullet::Bullet(const Bullet& proto,const Vector2& begin)
 std::unique_ptr<Bullet> Bullet::shoot(const Vector2& begin){
 	if(active==false){
 		//子弹原型时（只有原型会调用这个函数）
-		return std::unique_ptr<Bullet>{new Bullet(*this,begin)};
+		return std::make_unique<Bullet>(*this,begin);
 	}else{
 		return nullptr;
 	}
 }
 void Bullet::Update(const float deltaTime,Entity& shooter){
 	if(active&&!shouldRemove){
-		//只有克隆体是“实例”
+		if(isOnShoot){
+			tryTriggerEffects(shooter, Occasion::OnShoot);
+			isOnShoot=false;
+		}
 		position.x+=velocity.x*deltaTime*BULLET::BASIC_SPEED;
 		position.y+=velocity.y*deltaTime*BULLET::BASIC_SPEED;
 		Draw();
@@ -513,7 +805,6 @@ void Bullet::Update(const float deltaTime,Entity& shooter){
 	}
 }
 void Bullet::checkHit(Entity& shooter) {
-	//判断是否碰到目标，如果碰到了，触发效果（包括伤害），并返回true，否则返回false
 	if(Collision::checkBulletEntity(*this, shooter.getOpponent())){
 		tryTriggerEffects(shooter, Occasion::OnHit);
 		shouldRemove=true;
@@ -523,9 +814,9 @@ void Bullet::checkHit(Entity& shooter) {
 		}
 	}
 }
-void Bullet::tryTriggerEffects(Entity& shooter,const Occasion& timing) const{
-	for(auto effect:effects){
-		effect->tryTrigger(shooter,timing);
+void Bullet::tryTriggerEffects(Entity& shooter,const Occasion& timing){
+	for(auto& effect :effects){
+		effect->tryTrigger(shooter, timing);
 	}
 }
 void Bullet::Draw() const { 
@@ -576,7 +867,7 @@ Entity::Entity(const std::string texPath,const Vector2& pos,const int hp,const f
 			if(!IsTextureValid(texture)){
 				//当加载不成功时，使用临时图标
 				TraceLog(LOG_WARNING, "Using fallback texture for: %s",texPath.c_str());
-				texture=ResourceManager::Get().loadTexture(ASSETS_PATH "/fallback.png");
+				texture=ResourceManager::Get().loadTexture(ASSETS_IMAGE_PATH "/fallback.png");
 			}
 			boxCollider={position.x,position.y,(float)texture.width,(float)texture.height};
 		 }
@@ -661,20 +952,24 @@ void Enemy::drawHPandEnergy() const{
 
 
 以下是main.cpp中的内容：
-#ifndef ASSETS_PATH
-#define ASSETS_PATH
+#ifndef ASSETS_IMAGE_PATH
+#define ASSETS_IMAGE_PATH
+#include "EffectFactories.h"
+#include "EffectRegistry.h"
 #include "GameStageFwd.h"
+#include "SpecialEffect.h"
+#include <memory>
 #endif
 
 extern "C" {
 	#include "raylib.h"
 }
-#include <iostream>
-#include <memory>
 #include "Bullet.h"
 #include "Entity.h"
 #include "ResourceManager.h"
 #include "GameStage.h"
+#include "Effect/EffectRegistry.h"
+#include "Effect/EffectFactories.h"
 
 const int WindowWidth=1280;
 const int WindowHeight=720;
@@ -686,65 +981,51 @@ const Vector2 enemyVel={0,1};
 using playerPtr=std::unique_ptr<Player>;
 using enemyPtr=std::unique_ptr<Enemy>;
 
-void battle(playerPtr& player,enemyPtr& enemy);
-void entityInit(std::unique_ptr<Player>&,std::unique_ptr<Enemy>&,StageController& stg);
-
+void RegisterEffects();
+void entityInit(std::unique_ptr<Player>&,std::unique_ptr<Enemy>&);
+bool shouldEnd();
 int main(void){
+	RegisterEffects();
 	InitWindow(WindowWidth,WindowHeight,"SuperKLF");
 	StageController& state=StageController::Get();
 	ResourceManager& resMgr=ResourceManager::Get();
 	std::unique_ptr<Player> player;
 	std::unique_ptr<Enemy> enemy;
-	entityInit(player, enemy,state);
+	entityInit(player, enemy);
 	SetTargetFPS(180);
 	state.transitionTo(GameStage::Battle);
-	while(!WindowShouldClose()&&state.getCurrentStage()!=GameStage::EXIT){
+	while(!shouldEnd()){
 		BeginDrawing();
 		ClearBackground(WHITE);
 		DrawFPS(0, 0);
-		GameStage newStage;
-		switch(state.getCurrentStage()){
-			case(GameStage::MainMenu):
-			break;
-			case(GameStage::Battle):
-			battle(player,enemy);
-			newStage=state.checkBattleStage();
-			if(newStage!=GameStage::Battle){
-				state.transitionTo(newStage);
-			}
-			break;
-			case(GameStage::Victory):
-			ClearBackground(WHITE);
-			DrawText("You Win!", GetScreenWidth()/2, GetScreenHeight()/2, 120, GOLD);
-			break;
-			case(GameStage::Defeat):
-			state.handleDefeatInput();
-			break;
-			default:
-			std::cout<<"Not Developed!"<<std::endl;
-		}
+		state.update();
 		EndDrawing();
 	}
 	resMgr.cleanUp();
 	CloseWindow();
 }
-
-void battle(playerPtr& player,enemyPtr& enemy){
-		float deltaTime =GetFrameTime();
-		player->Update(deltaTime);
-		enemy->Update(deltaTime);
-		player->Draw();
-		enemy->Draw();
+void RegisterEffects(){
+	auto& registry=EffectRegistry::Get();
+	registry.registerFactory("SpeedBoost", std::make_unique<SpeedBoostFactory>());
+	registry.registerFactory("HealthBoost", std::make_unique<HealthBoostFactory>());
 }
-void entityInit(std::unique_ptr<Player>& player,std::unique_ptr<Enemy>& enemy,StageController& stg){
-	player.reset(new Player(ASSETS_PATH "player.png",playerPos,10,1,100,10));
-	enemy.reset(new Enemy {ASSETS_PATH "enemy.png",enemyPos});
+bool shouldEnd(){
+	if(WindowShouldClose()){return true;}
+	if(StageController::Get().getCurrentStage()==GameStage::EXIT){
+		return true;
+	}
+	return false;
+}
+
+void entityInit(std::unique_ptr<Player>& player,std::unique_ptr<Enemy>& enemy){
+	player.reset(new Player( ASSETS_IMAGE_PATH"player.png",playerPos,10,0.1,100,10));
+	enemy.reset(new Enemy { ASSETS_IMAGE_PATH"enemy.png",enemyPos});
 	player->setOpponent(*enemy);
-	player->addBullet(Bullet(ASSETS_PATH "pen.png",playerVel));
-	player->setBlast(Blast(ASSETS_PATH "warning.png",playerVel));
+	player->addBullet(Bullet( ASSETS_IMAGE_PATH"pen.png",playerVel));
+	player->setBlast(Blast( ASSETS_IMAGE_PATH"warning.png",playerVel));
 	enemy->setOpponent(*player);
-	enemy->addBullet({ASSETS_PATH "pen.png"});
-	stg.bindEntities(*player, *enemy);	
+	enemy->addBullet({ ASSETS_IMAGE_PATH"pen.png"});
+	StageController::Get().bindEntities(*player, *enemy);	
 }
 以下是CMakeLists.txt中的内容：
 #这是./src/Managers中的CMakeLists.txt
@@ -752,6 +1033,66 @@ cmake_minimum_required(VERSION 3.5.0)
 project(Managers)
 add_subdirectory(${SRC}/Managers/ResourceManager)
 add_subdirectory(${SRC}/Managers/GameStage)
+add_subdirectory(${SRC}/Managers/Data)
+以下是CMakeLists.txt中的内容：
+#Data中的CMakeLists.txt
+cmake_minimum_required(VERSION 3.5.0)
+#每个依赖库的名字
+project(Data)
+file(GLOB CURRENT_FILE ${PROJECT_SOURCE_DIR}/*.cpp)
+add_library(${PROJECT_NAME} STATIC ${CURRENT_FILE})
+target_include_directories(${PROJECT_NAME} PUBLIC ${HEADPATH})
+
+target_link_directories(${PROJECT_NAME} PRIVATE ${LIBPATH})
+以下是DataManager.cpp中的内容：
+#include "DataManager.h"
+#include "ResourceManager.h"
+#include "nlohmann/json.hpp"
+#include <fstream>
+#include <string>
+extern "C"{
+	#include "raylib.h"
+}
+
+using json= nlohmann::json;
+
+std::string autoSplit(const std::string&);
+const int DataManager::getCoinsEarned() const{
+	return DATA::BASIC_COINS_EARNED*DATA::BASIC_COINS_RATE*passedLevel;
+}
+DataManager::DataManager(){
+	//用nlohmann json从data.json中读取存档信息等
+	//从rewards.json读取可用奖励
+	if(FileExists(DATA::REWARD_CONFIG_PATH.c_str())){
+		std::ifstream file{DATA::REWARD_CONFIG_PATH};
+		json data=json::parse(file);
+		rewards.reserve(data.size());
+		for(auto& item :data){
+			Reward reward;
+			reward.name=item["name"].get<std::string>();
+			reward.description=autoSplit(item["description"].get<std::string>());
+			reward.icon=ResourceManager::Get().loadTexture(item["icon_path"].get<std::string>());
+			for(const auto& effect:item["effects"]){
+				reward.getEffects(effect);
+			}
+			rewards.push_back(std::move(reward));
+		}
+	}
+}
+std::string autoSplit(const std::string& str){
+	std::string newStr;
+	for(int i=0;i<str.length();i++){
+		newStr+=str[i];
+		if(i%26==0&&i!=0){
+			newStr+='\n';
+		}
+	}
+	newStr+='\0';
+	return newStr;
+}
+const Reward& DataManager::getReward(const int i){
+	return rewards.at(i);
+}
 以下是CMakeLists.txt中的内容：
 #StageController中的CMakeLists.txt
 cmake_minimum_required(VERSION 3.5.0)
@@ -763,6 +1104,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${HEADPATH})
 
 target_link_directories(${PROJECT_NAME} PRIVATE ${LIBPATH})
 以下是GameStage.cpp中的内容：
+#include "DataManager.h"
 #include "Entity.h"
 extern "C"{
 	#include "raylib.h"
@@ -777,6 +1119,7 @@ using Collision::checkIsTouchButton;
 
 void responseToSignalFromDefeat(const EventSignal signal);
 void drawDefeatScreen(const DefeatUI& ui);
+const GameStage checkBattleStage(const Player* player,const Enemy* enemy);
 
 StageController::StageController(){
 	currentStage=GameStage::MainMenu;
@@ -784,20 +1127,47 @@ StageController::StageController(){
 	player=nullptr;
 	enemy=nullptr;
 }
-
 void StageController::resetGame(){
 	if(player==nullptr||enemy==nullptr){return;}
 	player->reset();
 	enemy->reset();
-	DefeatUI::Get().reset();
+	DataManager::Get().reset();
 }
-
-const GameStage StageController::checkBattleStage() const{
+void StageController::update(){
+	switch(currentStage){
+		case(GameStage::MainMenu):
+		mainMenuUpdate();
+		break;
+		case(GameStage::Battle):
+		battleUpdate();
+		break;
+		case(GameStage::Victory):
+		victoryUpdate();
+		break;
+		case(GameStage::Defeat):
+		defeatUpdate();
+		break;
+		case(GameStage::Pause):
+		pauseUpdate();
+		break;
+		case(GameStage::EXIT):
+		break;
+	}	
+}
+void StageController::battleUpdate(){
+	float deltaTime=GetFrameTime();
+	player->Update(deltaTime);
+	enemy->Update(deltaTime);
+	player->Draw();
+	enemy->Draw();
+	currentStage=checkBattleStage(player, enemy);
+}
+const GameStage checkBattleStage(const Player* player,const Enemy* enemy){
 	if(!player->isAlive()){return GameStage::Defeat;}
 	if(!enemy->isAlive()){return GameStage::Victory;}
 	return GameStage::Battle;
 }
-void StageController::handleDefeatInput(){
+void StageController::defeatUpdate(){
 	DefeatUI& ui=DefeatUI::Get();
 	ui.Draw();
 	if(IsKeyPressed(KEY_SPACE)){
@@ -823,11 +1193,36 @@ void responseToSignalFromDefeat(const EventSignal signal){
 		ctrl.transitionTo(GameStage::Battle);
 		break;
 		case(EventSignal::EXIT):
-		ctrl.transitionTo(GameStage::EXIT);
+		ctrl.transitionTo(GameStage::MainMenu);
 		break;
 		case(EventSignal::IDLE):
 		break;
 	}
+}
+void StageController::victoryUpdate(){
+	VictoryUI& ui=VictoryUI::Get();
+	if(DataManager::Get().getRefreshTimes()==0){
+		ui.tryGenerateRewards(*player);
+	}
+	ui.Draw();
+	if(checkIsTouchButton(ui.getRefreshBtn())){
+		if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
+			ui.tryGenerateRewards(*player);
+		}
+	}
+	for(int i=0;i<3;i++){
+		if(checkIsTouchButton(ui.getRewardBtn(i))){
+			if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+				ui.chooseReward(i,*player);
+			}
+		}
+	}
+}
+void StageController::pauseUpdate(){
+
+}
+void StageController::mainMenuUpdate(){
+	transitionTo(GameStage::EXIT);
 }
 以下是CMakeLists.txt中的内容：
 #ResourceManager中的CMakeLists.txt
@@ -886,14 +1281,59 @@ void ResourceManager::unloadTexture(const std::string path){
 	}
 }
 
+const Font& ResourceManager::loadFont(){
+	if(isFontAssigned){return font;}
+	if(UI::FONT_PATH==""){
+		font=GetFontDefault();
+	}else{
+		font=LoadFont(UI::FONT_PATH.c_str());
+	}
+	return font;
+}
 void ResourceManager::cleanUp(){
 	for(auto& [path,tex]:textures){
 		UnloadTexture(tex);
 	}
 	textures.clear();
+	UnloadFont(font);
 	TraceLog(LOG_INFO, "[RES] All resources released");
 }
 
+以下是CMakeLists.txt中的内容：
+#RewardSystem中的CMakeLists.txt
+cmake_minimum_required(VERSION 3.5.0)
+#每个依赖库的名字
+project(RewardSystem)
+file(GLOB CURRENT_FILE ${PROJECT_SOURCE_DIR}/*.cpp)
+add_library(${PROJECT_NAME} STATIC ${CURRENT_FILE})
+target_include_directories(${PROJECT_NAME} PUBLIC ${HEADPATH})
+
+target_link_directories(${PROJECT_NAME} PRIVATE ${LIBPATH})
+以下是RewardSystem.cpp中的内容：
+#include "RewardSystem.h"
+#include "Effect/EffectRegistry.h"
+extern "C"{
+	#include "raylib.h"	
+}
+
+using json=nlohmann::json;
+
+void Reward::getEffects(const json& j){
+	std::string type=j["type"].get<std::string>();
+	if(auto effect=EffectRegistry::Get().createInstantEffect(type, j)){
+		effects.push_back(effect);
+	}else{
+		TraceLog(LOG_WARNING,"Unknown instant effect type: %s",type.c_str());
+	}
+}
+以下是BulletEffect.cpp中的内容：
+#include "Effect/BulletEffect.h"
+#include "Entity.h"
+void GiveDamage::tryTrigger(Entity& shooter,const Occasion& timing){
+	if(timing==Occasion::OnHit){
+		shooter.getOpponent().takeDamage(damage);
+	}
+}
 以下是CMakeLists.txt中的内容：
 #SpecialEffect中的CMakeLists.txt
 cmake_minimum_required(VERSION 3.5.0)
@@ -904,13 +1344,19 @@ add_library(${PROJECT_NAME} STATIC ${CURRENT_FILE})
 target_include_directories(${PROJECT_NAME} PUBLIC ${HEADPATH})
 
 target_link_directories(${PROJECT_NAME} PRIVATE ${LIBPATH})
-以下是SpecialEffect.cpp中的内容：
-#include "SpecialEffect.h"
+以下是InstantEffect.cpp中的内容：
+#include "Effect/InstantEffect.h"
 #include "Entity.h"
+void SpeedBoost::trigger(Player& player) const{
+	player.setAttackInterval(rate);
+}
 
-void GiveDamage::tryTrigger(Entity& shooter,const Occasion& timing){
-	if(timing==Occasion::OnHit){
-		shooter.getOpponent().takeDamage(damage);
+void HealthBoost::trigger(Player& player) const{
+	const int* intPtr=std::get_if<int>(&value);
+	if(intPtr!=nullptr){
+		player.MaxHealthBoost(*intPtr);
+	}else{
+		player.MaxHealthBoost(*(std::get_if<float>(&value)));
 	}
 }
 以下是CMakeLists.txt中的内容：
@@ -923,64 +1369,143 @@ add_library(${PROJECT_NAME} STATIC ${CURRENT_FILE})
 target_include_directories(${PROJECT_NAME} PUBLIC ${HEADPATH})
 
 target_link_directories(${PROJECT_NAME} PRIVATE ${LIBPATH})
-以下是UI.cpp中的内容：
-#include "UI.h"
+add_subdirectory(${SRC}/UI/UIComponent)
+以下是CMakeLists.txt中的内容：
+#UI中的CMakeLists.txt
+cmake_minimum_required(VERSION 3.5.0)
+#每个依赖库的名字
+project(UIComponent)
+file(GLOB CURRENT_FILE ${PROJECT_SOURCE_DIR}/*.cpp)
+add_library(${PROJECT_NAME} STATIC ${CURRENT_FILE})
+target_include_directories(${PROJECT_NAME} PUBLIC ${HEADPATH})
+
+target_link_directories(${PROJECT_NAME} PRIVATE ${LIBPATH})
+以下是UIComponent.cpp中的内容：
+#include "UIComponent.h"
+#include "ResourceManager.h"
 #include "Collision.h"
-#include <raylib.h>
-bool isButtonPressed(const Button& btn);
-bool isButtonHovered(const Button& btn);
-Button::Button(Rectangle r,std::string t,Color c){
-	rect=r;
-	text=t;
-	color=c;
-	const int maxTextWidth=rect.width*UI::WIDTH_RADIO;
-	const int maxFontByHeight=rect.height*UI::HEIGHT_RADIO;
-	int low=UI::MIN_FONT_SIZE;
-	int high=maxFontByHeight;
-	int bestSize=UI::MIN_FONT_SIZE;
-	Vector2 textSize;
-	int mid;
-	while(low<=high){
-		mid=(low+high)/2;
-		textSize=MeasureTextEx(UI::font, text.c_str(), mid, 1);
-		if(textSize.x<=maxTextWidth){
-			bestSize=mid;
-			low=mid+1;
-		}else{
-			high=mid-1;
-		}
-	}
-	fontSize=bestSize;
-	textSize=MeasureTextEx(UI::font, text.c_str(), fontSize, 1);
-	textPos={
-		rect.x+(rect.width-textSize.x)/2,
-		rect.y+(rect.height-textSize.y)/2
-	};
-	
+extern "C"{
+    #include "raylib.h"
 }
+const bool isButtonPressed(const Button& btn);
+const bool isButtonHovered(const Button& btn);
+
+const float UI::countTextPosX(const std::string& str,const int origin,const int fontSize,const int offset){
+	float posX=origin;
+	const Font& font=ResourceManager::Get().loadFont();
+	posX-=MeasureTextEx(font, str.c_str(), fontSize, 1).x/2-offset;
+	return posX;
+}	
+
+
+Button::Button(Rectangle r, std::string t, Color c) {
+    rect = r;
+    text = t;
+    color = c;
+	resetPosAndSize();
+}
+void Button::resetPosAndSize(){
+    const float maxTextWidth = rect.width * UI::WIDTH_RADIO;
+    const float maxTextHeight = rect.height * UI::HEIGHT_RADIO;
+	const Font& font=ResourceManager::Get().loadFont();
+    int low = UI::MIN_FONT_SIZE;
+    int high = int(maxTextHeight);
+    int bestSize = UI::MIN_FONT_SIZE;
+    while (low <= high) {
+        int mid = (low + high) / 2;
+        Vector2 textSize = MeasureTextEx(font, text.c_str(), mid, 1);
+        if (textSize.x <= maxTextWidth) {
+            bestSize = mid;
+            low = mid + 1;
+        } else {
+            high = mid - 1;
+        }
+    }
+    fontSize = bestSize;
+	Vector2 textSize=MeasureTextEx(font, text.c_str(), fontSize, 1);
+    textPos = {
+		UI::countTextPosX(text, rect.x, fontSize,(rect.width/2)),
+        rect.y + (rect.height -textSize.y)/2
+    };	
+}
+
 void Button::Draw() const{
 	Color drawColor =color;
-	if(isButtonPressed(*this)){
-		drawColor=ColorBrightness(color, -0.3f);
-	}else if(isButtonHovered(*this)){
-		drawColor=ColorBrightness(color, -0.15f);
+	const Font& font=ResourceManager::Get().loadFont();
+	if(available){
+		if(isButtonPressed(*this)){
+			drawColor=ColorBrightness(color, -0.3f);
+		}else if(isButtonHovered(*this)){
+			drawColor=ColorBrightness(color, -0.15f);
+		}
+	}else{
+		drawColor=DARKGRAY;
 	}
 	DrawRectangleRec(rect, drawColor);
 	BeginScissorMode(rect.x, rect.y, rect.width, rect.height);
-	DrawTextEx(UI::font, text.c_str(), textPos, fontSize, 1, WHITE);
+	DrawTextEx(font, text.c_str(), textPos, fontSize, 1, WHITE);
 	EndScissorMode();
 }
-bool isButtonPressed(const Button& btn){
+void ButtonWithExplain::Draw() const{
+	Button::Draw();
+	if(isButtonHovered(*this)&&available){
+        DrawExplain();
+	}  
+}
+void ButtonWithExplain::DrawExplain() const{
+    Rectangle explainBox={
+        rect.x,rect.y+rect.height,rect.width,rect.height*2.5f
+    };
+    DrawRectangleRec(explainBox, ColorBrightness(color, 0.15f));
+    Vector2 position={explainBox.x,explainBox.y};
+    DrawTextEx(ResourceManager::Get().loadFont(), explain.c_str(), position, UI::EXPLAIN_FONTSIZE, 1, WHITE);
+}
+
+void ButtonWithNumber::Draw() const{
+	Color drawColor =color;
+	const Font& font=ResourceManager::Get().loadFont();
+	if(available){
+		if(isButtonPressed(*this)){
+			drawColor=ColorBrightness(color, -0.3f);
+		}else if(isButtonHovered(*this)){
+			drawColor=ColorBrightness(color, -0.15f);
+		}
+	}else{
+		drawColor=DARKGRAY;
+	}
+	DrawRectangleRec(rect, drawColor);
+	BeginScissorMode(rect.x, rect.y, rect.width, rect.height);
+	DrawTextEx(font, (text+addition).c_str(), textPos, fontSize, 1, WHITE);
+	EndScissorMode();
+}
+
+const bool isButtonPressed(const Button& btn){
 	return isButtonHovered(btn)&&IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
 }
-bool isButtonHovered(const Button& btn){
+const bool isButtonHovered(const Button& btn){
 	return Collision::checkIsTouchButton(btn);
 }
+以下是UI.cpp中的内容：
+#include "UI.h"
+#include "DataManager.h"
+#include "Entity.h"
+#include "RewardSystem.h"
+#include "UIComponent.h"
+#include <string>
+#include <random>
+extern "C"{
+	#include "raylib.h"
+}
+
 void DefeatUI::Draw() const{
-	ClearBackground(WHITE);	
-	DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK,0.5f));
-	DrawText("Mamba Out!",500,200,2*UI::FONTSIZE,RED);
-	DrawText(TextFormat("You have passed %d levels!",passLevel), 500, 350, UI::FONTSIZE, RED);
+	ClearBackground(WHITE);
+	const int screenHeight=GetScreenHeight();
+	const int screenWidth=GetScreenWidth();	
+	DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK,0.5f));
+	std::string title="Mamba Out!";
+	std::string subTitle=R"(You have passed %d levels!)";
+	DrawText(title.c_str(),UI::countTextPosX(title,screenWidth/2,2*UI::FONTSIZE),200,2*UI::FONTSIZE,RED);
+	DrawText(TextFormat(subTitle.c_str(),DataManager::Get().getPassedLevel()), UI::countTextPosX(subTitle, screenWidth/2, UI::FONTSIZE), 350, UI::FONTSIZE, RED);
 	restartButton.Draw();
 	exitButton.Draw();
 }
@@ -1000,4 +1525,57 @@ DefeatUI::DefeatUI(){
 		UI::BASIC_BUTTON_WIDTH,
 		UI::BASIC_BUTTON_HEIGHT},
 		"Quit",ORANGE};
+}
+VictoryUI::VictoryUI(){
+	const int screenHeight=GetScreenHeight();
+	const int screenWidth=GetScreenWidth();
+	refreshBtn={{screenWidth/2.0f-UI::BASIC_BUTTON_WIDTH/2.0f,
+		screenHeight*0.8f,
+		UI::BASIC_BUTTON_WIDTH,
+		UI::BASIC_BUTTON_HEIGHT},
+		"Refresh",ORANGE};
+	for(int i=0;i<3;i++){
+		rewardBtn[i]={
+			{GetScreenWidth()/5.0f*(i+2)-UI::BASIC_BUTTON_WIDTH,
+			GetScreenHeight()*0.5f,
+			UI::BASIC_BUTTON_WIDTH,
+			UI::BASIC_BUTTON_HEIGHT},
+			"Reward",ORANGE,"Explain"};
+	}			
+}
+void VictoryUI::tryGenerateRewards(Player& player){
+	player.deductMoney(DataManager::Get().getRefreshMoney());
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<> dis(0,DataManager::Get().getRewardSize()-1);
+	currentRewards.clear();
+	for(int i=0;i<3;i++){
+		currentRewards.push_back(DataManager::Get().getReward(dis(gen)));
+		rewardBtn[i].setText(currentRewards[i].name);
+		rewardBtn[i].setExplain(currentRewards[i].description);
+	}
+	DataManager::Get().refreshTimesAdvance();
+	if(player.getMoney()<=DataManager::Get().getRefreshMoney()){
+		refreshBtn.setAvailibility(false);
+	}else{
+		refreshBtn.setAvailibility(true);
+	}
+	refreshBtn.setAddition("(-"+std::to_string(DataManager::Get().getRefreshMoney())+")");
+}
+void VictoryUI::chooseReward(const int i,Player& player){
+	DataManager::Get().resetRefreshTimes();
+	Reward reward=currentRewards[i];
+}
+
+void VictoryUI::Draw() const{
+	ClearBackground(WHITE);
+	const int screenHeight=GetScreenHeight();
+	const int screenWidth=GetScreenWidth();
+	DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK,0.5f));
+	std::string subTitle=R"(You passed %d levels!)";
+	DrawText(TextFormat(subTitle.c_str(),DataManager::Get().getPassedLevel()), UI::countTextPosX(subTitle, screenWidth/2, 2*UI::FONTSIZE), 200, 2*UI::FONTSIZE, RED);
+	for(int i=0;i<3;i++){
+		rewardBtn[i].Draw();
+	}
+	refreshBtn.Draw();
 }

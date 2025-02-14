@@ -13,5 +13,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ResourceManager)
 target_link_libraries(${PROJECT_NAME} PRIVATE GameStage)
 target_link_libraries(${PROJECT_NAME} PRIVATE SpecialEffect)
 target_link_libraries(${PROJECT_NAME} PRIVATE UI)
-
+target_link_libraries(${PROJECT_NAME} PRIVATE UIComponent)
+target_link_libraries(${PROJECT_NAME} PRIVATE Data)
+target_link_libraries(${PROJECT_NAME} PRIVATE RewardSystem)
 target_link_directories(${PROJECT_NAME} PRIVATE ${LIBPATH})

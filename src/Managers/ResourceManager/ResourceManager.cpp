@@ -44,10 +44,20 @@ void ResourceManager::unloadTexture(const std::string path){
 	}
 }
 
+const Font& ResourceManager::loadFont(){
+	if(isFontAssigned){return font;}
+	if(UI::FONT_PATH==""){
+		font=GetFontDefault();
+	}else{
+		font=LoadFont(UI::FONT_PATH.c_str());
+	}
+	return font;
+}
 void ResourceManager::cleanUp(){
 	for(auto& [path,tex]:textures){
 		UnloadTexture(tex);
 	}
 	textures.clear();
+	UnloadFont(font);
 	TraceLog(LOG_INFO, "[RES] All resources released");
 }

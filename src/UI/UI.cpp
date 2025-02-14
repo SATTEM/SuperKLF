@@ -1,57 +1,23 @@
 #include "UI.h"
-#include "Collision.h"
-#include <raylib.h>
-bool isButtonPressed(const Button& btn);
-bool isButtonHovered(const Button& btn);
-Button::Button(Rectangle r, std::string t, Color c) {
-    rect = r;
-    text = t;
-    color = c;
-    const float maxTextWidth = rect.width * UI::WIDTH_RADIO;
-    const float maxTextHeight = rect.height * UI::HEIGHT_RADIO;
-    int low = UI::MIN_FONT_SIZE;
-    int high = int(maxTextHeight);
-    int bestSize = UI::MIN_FONT_SIZE;
-    while (low <= high) {
-        int mid = (low + high) / 2;
-        float textSize = MeasureText( text.c_str(), mid);
-        if (textSize <= maxTextWidth) {
-            bestSize = mid;
-            low = mid + 1;
-        } else {
-            high = mid - 1;
-        }
-    }
-    fontSize = bestSize;
-    float textSize = MeasureText( text.c_str(), fontSize);
-    textPos = {
-        rect.x + (rect.width - textSize) / 2,
-        rect.y + (rect.height-maxTextHeight) / 2
-    };
+#include "DataManager.h"
+#include "Entity.h"
+#include "RewardSystem.h"
+#include "UIComponent.h"
+#include <string>
+#include <random>
+extern "C"{
+	#include "raylib.h"
 }
-void Button::Draw() const{
-	Color drawColor =color;
-	if(isButtonPressed(*this)){
-		drawColor=ColorBrightness(color, -0.3f);
-	}else if(isButtonHovered(*this)){
-		drawColor=ColorBrightness(color, -0.15f);
-	}
-	DrawRectangleRec(rect, drawColor);
-	BeginScissorMode(rect.x, rect.y, rect.width, rect.height);
-	DrawTextEx(GetFontDefault(), text.c_str(), textPos, fontSize, 1, WHITE);
-	EndScissorMode();
-}
-bool isButtonPressed(const Button& btn){
-	return isButtonHovered(btn)&&IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
-}
-bool isButtonHovered(const Button& btn){
-	return Collision::checkIsTouchButton(btn);
-}
+
 void DefeatUI::Draw() const{
-	ClearBackground(WHITE);	
-	DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK,0.5f));
-	DrawText("Mamba Out!",500,200,2*UI::FONTSIZE,RED);
-	DrawText(TextFormat("You have passed %d levels!",passLevel), 500, 350, UI::FONTSIZE, RED);
+	ClearBackground(WHITE);
+	const int screenHeight=GetScreenHeight();
+	const int screenWidth=GetScreenWidth();	
+	DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK,0.5f));
+	std::string title="Mamba Out!";
+	std::string subTitle=R"(You have passed %d levels!)";
+	DrawText(title.c_str(),UI::countTextPosX(title,screenWidth/2,2*UI::FONTSIZE),200,2*UI::FONTSIZE,RED);
+	DrawText(TextFormat(subTitle.c_str(),DataManager::Get().getPassedLevel()), UI::countTextPosX(subTitle, screenWidth/2, UI::FONTSIZE), 350, UI::FONTSIZE, RED);
 	restartButton.Draw();
 	exitButton.Draw();
 }
@@ -71,4 +37,57 @@ DefeatUI::DefeatUI(){
 		UI::BASIC_BUTTON_WIDTH,
 		UI::BASIC_BUTTON_HEIGHT},
 		"Quit",ORANGE};
+}
+VictoryUI::VictoryUI(){
+	const int screenHeight=GetScreenHeight();
+	const int screenWidth=GetScreenWidth();
+	refreshBtn={{screenWidth/2.0f-UI::BASIC_BUTTON_WIDTH/2.0f,
+		screenHeight*0.8f,
+		UI::BASIC_BUTTON_WIDTH,
+		UI::BASIC_BUTTON_HEIGHT},
+		"Refresh",ORANGE};
+	for(int i=0;i<3;i++){
+		rewardBtn[i]={
+			{GetScreenWidth()/5.0f*(i+2)-UI::BASIC_BUTTON_WIDTH,
+			GetScreenHeight()*0.5f,
+			UI::BASIC_BUTTON_WIDTH,
+			UI::BASIC_BUTTON_HEIGHT},
+			"Reward",ORANGE,"Explain"};
+	}			
+}
+void VictoryUI::tryGenerateRewards(Player& player){
+	player.deductMoney(DataManager::Get().getRefreshMoney());
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<> dis(0,DataManager::Get().getRewardSize()-1);
+	currentRewards.clear();
+	for(int i=0;i<3;i++){
+		currentRewards.push_back(DataManager::Get().getReward(dis(gen)));
+		rewardBtn[i].setText(currentRewards[i].name);
+		rewardBtn[i].setExplain(currentRewards[i].description);
+	}
+	DataManager::Get().refreshTimesAdvance();
+	if(player.getMoney()<=DataManager::Get().getRefreshMoney()){
+		refreshBtn.setAvailibility(false);
+	}else{
+		refreshBtn.setAvailibility(true);
+	}
+	refreshBtn.setAddition("(-"+std::to_string(DataManager::Get().getRefreshMoney())+")");
+}
+void VictoryUI::chooseReward(const int i,Player& player){
+	DataManager::Get().resetRefreshTimes();
+	Reward reward=currentRewards[i];
+}
+
+void VictoryUI::Draw() const{
+	ClearBackground(WHITE);
+	const int screenHeight=GetScreenHeight();
+	const int screenWidth=GetScreenWidth();
+	DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK,0.5f));
+	std::string subTitle=R"(You passed %d levels!)";
+	DrawText(TextFormat(subTitle.c_str(),DataManager::Get().getPassedLevel()), UI::countTextPosX(subTitle, screenWidth/2, 2*UI::FONTSIZE), 200, 2*UI::FONTSIZE, RED);
+	for(int i=0;i<3;i++){
+		rewardBtn[i].Draw();
+	}
+	refreshBtn.Draw();
 }

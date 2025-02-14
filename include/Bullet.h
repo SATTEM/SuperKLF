@@ -1,5 +1,6 @@
 #ifndef BULLET_H
 #define BULLET_H
+
 #include <vector>
 extern "C"{
 	#include "raylib.h"
@@ -7,9 +8,10 @@ extern "C"{
 #include <memory>
 #include <string>
 #include "GameStageFwd.h"
+#include "Effect/BulletEffect.h"
 
 class Entity;
-class BulletEffect;
+
 
 namespace BULLET{
 	//子弹
@@ -33,6 +35,7 @@ private:
 	int damage;
 	float colliderRadius;
 	bool active;
+	bool isOnShoot=true;
 	bool shouldRemove=false;
 	std::vector<std::shared_ptr<BulletEffect>> effects;
 
@@ -46,8 +49,8 @@ public:
 	void Draw() const;
 	void Update(const float deltaTime,Entity& shooter);
 	void checkHit(Entity& shooter);
-	void tryTriggerEffects(Entity& shooter,const Occasion& timing) const;
-	void addEffect(std::shared_ptr<BulletEffect> effect){effects.push_back(effect);}
+	void tryTriggerEffects(Entity& shooter,const Occasion& timing);
+	void addEffect(std::shared_ptr<BulletEffect> effect){effects.push_back(std::move(effect));}
 	void setDamage(const int dmg){damage=dmg;}
 	void setDrawScale(const float val){drawScale=val;}
 	void countColliderRadius(const Vector2 size=BULLET::BULLET_SIZE);

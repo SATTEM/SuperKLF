@@ -1,3 +1,4 @@
+#include "DataManager.h"
 #include "Entity.h"
 extern "C"{
 	#include "raylib.h"
@@ -12,7 +13,6 @@ using Collision::checkIsTouchButton;
 
 void responseToSignalFromDefeat(const EventSignal signal);
 void drawDefeatScreen(const DefeatUI& ui);
-void handleDefeatInput();
 const GameStage checkBattleStage(const Player* player,const Enemy* enemy);
 
 StageController::StageController(){
@@ -25,7 +25,7 @@ void StageController::resetGame(){
 	if(player==nullptr||enemy==nullptr){return;}
 	player->reset();
 	enemy->reset();
-	DefeatUI::Get().reset();
+	DataManager::Get().reset();
 }
 void StageController::update(){
 	switch(currentStage){
@@ -62,9 +62,6 @@ const GameStage checkBattleStage(const Player* player,const Enemy* enemy){
 	return GameStage::Battle;
 }
 void StageController::defeatUpdate(){
-	handleDefeatInput();
-}
-void handleDefeatInput(){
 	DefeatUI& ui=DefeatUI::Get();
 	ui.Draw();
 	if(IsKeyPressed(KEY_SPACE)){
@@ -97,7 +94,23 @@ void responseToSignalFromDefeat(const EventSignal signal){
 	}
 }
 void StageController::victoryUpdate(){
-	DrawText("You Win!", GetScreenWidth()/2, GetScreenHeight()/2, 120, GOLD);
+	VictoryUI& ui=VictoryUI::Get();
+	if(DataManager::Get().getRefreshTimes()==0){
+		ui.tryGenerateRewards(*player);
+	}
+	ui.Draw();
+	if(checkIsTouchButton(ui.getRefreshBtn())){
+		if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
+			ui.tryGenerateRewards(*player);
+		}
+	}
+	for(int i=0;i<3;i++){
+		if(checkIsTouchButton(ui.getRewardBtn(i))){
+			if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+				ui.chooseReward(i,*player);
+			}
+		}
+	}
 }
 void StageController::pauseUpdate(){
 

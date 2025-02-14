@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Speed",
+    "description": "attack interval reduce 20%",
+    "icon_path": "./res/image/attack_speed.png",
+    "effects": {
+      "type":"SpeedBoost",
+      "multiplier": 0.8
+    }
+  },
+  {
+    "name": "Health",
+    "description": "max health boost 50",
+    "icon_path": "./res/image/health_boost.png",
+    "effects": {}
+  }
+]
