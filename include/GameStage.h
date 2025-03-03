@@ -2,6 +2,7 @@
 #define GAMESTAGE_H
 #include "Entity.h"
 #include "GameStageFwd.h"
+#include <raylib.h>
 
 
 class StageController{

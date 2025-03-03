@@ -10,6 +10,7 @@ namespace DATA {
 	const std::string LEVEL_CONFIG_PATH=ASSETS_DATA_PATH "levels.json";
 	const std::string REWARD_CONFIG_PATH=ASSETS_DATA_PATH "rewards.json";
 	const std::string DATA_PATH=ASSETS_DATA_PATH "data.json";
+	const std::string EFFECT_PATH=ASSETS_DATA_PATH "Effects.json";
 }
 
 class DataManager{

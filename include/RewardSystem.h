@@ -1,21 +1,20 @@
 #ifndef REWARDSYSTEM_H
 #define REWARDSYSTEM_H
 
-#include <string>
 #include <memory>
-#include <vector>
-#include "nlohmann/json.hpp"
+#include <string>
 #include "Effect/InstantEffect.h"
 extern "C"{
 	#include "raylib.h"
 }
-
+class Entity;
 struct Reward{
 	std::string name;
 	std::string description;
-	std::vector<std::shared_ptr<InstantEffect>> effects;
+	std::shared_ptr<InstantEffect> effect;
 	Texture2D icon;
-	void getEffects(const nlohmann::json& j);
+	void applyToEntity(Entity& entity);
+	void getEffect(const std::string& id);
 };
 
 #endif

@@ -6,14 +6,15 @@ add_executable(${PROJECT_NAME})
 target_sources(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${HEADPATH})
 #依赖库，每次添加库组件都要在这里加上
-target_link_libraries(${PROJECT_NAME} PRIVATE raylib)
-target_link_libraries(${PROJECT_NAME} PRIVATE Entity)
-target_link_libraries(${PROJECT_NAME} PRIVATE Collision)
-target_link_libraries(${PROJECT_NAME} PRIVATE ResourceManager)
-target_link_libraries(${PROJECT_NAME} PRIVATE GameStage)
-target_link_libraries(${PROJECT_NAME} PRIVATE SpecialEffect)
-target_link_libraries(${PROJECT_NAME} PRIVATE UI)
-target_link_libraries(${PROJECT_NAME} PRIVATE UIComponent)
-target_link_libraries(${PROJECT_NAME} PRIVATE Data)
-target_link_libraries(${PROJECT_NAME} PRIVATE RewardSystem)
+target_link_libraries(${PROJECT_NAME} PRIVATE 
+	raylib
+	Entity
+	Collision
+	ResourceManager
+	GameStage
+	SpecialEffect
+	UIComponent
+	UI
+	Data
+	RewardSystem)
 target_link_directories(${PROJECT_NAME} PRIVATE ${LIBPATH})

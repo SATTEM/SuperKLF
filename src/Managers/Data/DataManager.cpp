@@ -25,10 +25,9 @@ DataManager::DataManager(){
 			reward.name=item["name"].get<std::string>();
 			reward.description=autoSplit(item["description"].get<std::string>());
 			reward.icon=ResourceManager::Get().loadTexture(item["icon_path"].get<std::string>());
-			for(const auto& effect:item["effects"]){
-				reward.getEffects(effect);
-			}
+			reward.getEffect(item["effectID"].get<std::string>());
 			rewards.push_back(std::move(reward));
+			TraceLog(LOG_INFO, "[RES] Reward Loaded: %s",item["name"].get<std::string>().c_str());
 		}
 	}
 }

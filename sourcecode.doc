@@ -8,11 +8,13 @@
 │   ├── DataManager.h
 │   ├── Effect
 │   │   ├── BulletEffect.h
-│   │   ├── EffectFactories.h
-│   │   ├── EffectRegistry.h
+│   │   ├── EffectManager.h
+│   │   ├── InstantEffectFactory.h
 │   │   ├── InstantEffect.h
+│   │   ├── RelicEffectFactory.h
 │   │   └── RelicEffect.h
 │   ├── Entity.h
+│   ├── EventSystem.h
 │   ├── GameStageFwd.h
 │   ├── GameStage.h
 │   ├── nlohmann
@@ -30,6 +32,7 @@
 ├── libs
 │   ├── libCollision.a
 │   ├── libData.a
+│   ├── libEffectManager.a
 │   ├── libEntity.a
 │   ├── libGameStage.a
 │   ├── libraylib.so
@@ -42,17 +45,23 @@
 ├── outline
 ├── res
 │   ├── data
+│   │   ├── Effects.json
 │   │   └── rewards.json
-│   └── image
-│       ├── attack_speed.png
-│       ├── enemy.png
-│       ├── exit.png
-│       ├── fallback.png
-│       ├── health_boost.png
-│       ├── pen.png
-│       ├── player.png
-│       ├── restart.png
-│       └── warning.png
+│   ├── enemy.png
+│   ├── fallback.png
+│   ├── image
+│   │   ├── attack_speed.png
+│   │   ├── enemy.png
+│   │   ├── exit.png
+│   │   ├── fallback.png
+│   │   ├── health_boost.png
+│   │   ├── pen.png
+│   │   ├── player.png
+│   │   ├── restart.png
+│   │   └── warning.png
+│   ├── pen.png
+│   ├── player.png
+│   └── warning.png
 ├── sourcecode.doc
 └── src
     ├── CMakeLists.txt
@@ -69,6 +78,9 @@
     │   ├── Data
     │   │   ├── CMakeLists.txt
     │   │   └── DataManager.cpp
+    │   ├── Effect
+    │   │   ├── CMakeLists.txt
+    │   │   └── EffectManager.cpp
     │   ├── GameStage
     │   │   ├── CMakeLists.txt
     │   │   └── GameStage.cpp
@@ -89,7 +101,7 @@
         │   └── UIComponent.cpp
         └── UI.cpp
 
-20 directories, 69 files
+21 directories, 80 files
 以下是CMakeLists.txt中的内容：
 #根目录CMakeLists.txt
 cmake_minimum_required(VERSION 3.5.0)
@@ -114,9 +126,9 @@ add_compile_definitions(ASSETS_IMAGE_PATH="./res/image/")
 add_compile_definitions(ASSETS_DATA_PATH="./res/data/")
 add_subdirectory(${SRC}/Entity)
 add_subdirectory(${SRC}/Collision)
-add_subdirectory(${SRC}/Managers)
-add_subdirectory(${SRC}/SpecialEffect)
 add_subdirectory(${SRC}/UI)
+add_subdirectory(${SRC}/SpecialEffect)
+add_subdirectory(${SRC}/Managers)
 add_subdirectory(${SRC}/RewardSystem)
 add_subdirectory(${PROJECT_SOURCE_DIR}/src)
 以下是Bullet.h中的内容：
@@ -129,7 +141,6 @@ extern "C"{
 }
 #include <memory>
 #include <string>
-#include "GameStageFwd.h"
 #include "Effect/BulletEffect.h"
 
 class Entity;
@@ -223,6 +234,7 @@ namespace DATA {
 	const std::string LEVEL_CONFIG_PATH=ASSETS_DATA_PATH "levels.json";
 	const std::string REWARD_CONFIG_PATH=ASSETS_DATA_PATH "rewards.json";
 	const std::string DATA_PATH=ASSETS_DATA_PATH "data.json";
+	const std::string EFFECT_PATH=ASSETS_DATA_PATH "Effects.json";
 }
 
 class DataManager{
@@ -258,7 +270,7 @@ public:
 以下是BulletEffect.h中的内容：
 #ifndef BULLETEFFECT_H
 #define BULLETEFFECT_H
-#include "GameStageFwd.h"
+#include "EventSystem.h"
 class Entity;
 class BulletEffect{
 protected:
@@ -275,110 +287,177 @@ public:
 	void tryTrigger(Entity& shooter,const Occasion& timing)override;
 };
 #endif
-以下是EffectFactories.h中的内容：
-#ifndef EFFECTFACTORIES_H
-#define EFFECTFACTORIES_H
+以下是EffectManager.h中的内容：
+#ifndef EFFECTMANAGER_H
+#define EFFECTMANAGER_H
 #include "InstantEffect.h"
-#include <memory>
-
-
-class SpeedBoostFactory:public InstantEffectFactory{
-public:
-	std::shared_ptr<InstantEffect> createFromJson(const nlohmann::json& json) override{
-		return std::make_shared<SpeedBoost>(json["rate"].get<float>());
-	}
-};
-class HealthBoostFactory:public InstantEffectFactory{
-public:
-	std::shared_ptr<InstantEffect> createFromJson(const nlohmann::json& json) override{
-		if(json["value"].is_number_integer()){
-			return std::make_shared<HealthBoost>(json["value"].get<int>());
-		}
-		return std::make_shared<HealthBoost>(json["value"].get<float>());
-	}
-};
-
-#endif
-以下是EffectRegistry.h中的内容：
-#ifndef EFFECTREGISTRY_H
-#define EFFECTREGISTRY_H
+#include "RelicEffect.h"
+#include "nlohmann/json.hpp"
+#include "InstantEffectFactory.h"
+#include "RelicEffectFactory.h"
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include "InstantEffect.h"
-class EffectRegistry{
+
+class EffectManager{
 private:
-	std::unordered_map<std::string,std::unique_ptr<InstantEffectFactory>> factories;
-	EffectRegistry()=default;
-	~EffectRegistry()=default;
+	EffectManager()=default;
+	~EffectManager()=default;
 public:
-	static EffectRegistry& Get(){
-		static EffectRegistry instance;
+	EffectManager(const EffectManager&)=delete;
+	void operator=(const EffectManager&)=delete;
+	static EffectManager& Get(){
+		static EffectManager instance;
 		return instance;
 	}
-	void registerFactory(const std::string& type,std::unique_ptr<InstantEffectFactory> factory){
-		factories[type]=std::move(factory);
+	//分发加载任务
+	void loadEffects(const nlohmann::json&)const;
+	//从InstantEffectLoader获取一个即时效果
+	std::shared_ptr<InstantEffect> getInstantEffect(const std::string&)const;
+	//Relic效果同理
+	std::shared_ptr<RelicEffect> getRelicEffect(const std::string&) const;
+};
+class InstantEffectLoader{
+private:
+	InstantEffectLoader()=default;
+	~InstantEffectLoader()=default;
+	std::unordered_map<std::string, std::unique_ptr<InstantEffectFactory>> factories;
+public:
+	InstantEffectLoader(const InstantEffectLoader&)=delete;
+	void operator=(const InstantEffectLoader&)=delete;
+	static InstantEffectLoader& Get(){
+		static InstantEffectLoader instance;
+		return instance;
 	}
-	std::shared_ptr<InstantEffect> createInstantEffect(const std::string& type,const nlohmann::json& json){
-		auto it=factories.find(type);
-		if(it!=factories.end()){
-			return it->second->createFromJson(json);
-		}
-		return nullptr;
+	//加载json中即时效果数组的每一个元素的工厂
+	void loadInstantEffect(const nlohmann::json& effects);
+	//通过已加载的效果工厂创建效果
+	std::shared_ptr<InstantEffect> getEffect(const std::string&);
+};
+//RelicEffect
+class RelicEffectLoader{
+private:
+	RelicEffectLoader()=default;
+	~RelicEffectLoader()=default;
+	std::unordered_map<std::string, std::shared_ptr<RelicEffectFactory>> factories;
+public:
+	RelicEffectLoader(const RelicEffectLoader&)=delete;
+	void operator=(const RelicEffectLoader&)=delete;
+	static RelicEffectLoader& Get(){
+		static RelicEffectLoader instance;
+		return instance;
+	}
+	//加载json中遗物效果数组的每一个元素
+	void loadRelicEffect(const nlohmann::json& json);
+	//通过已加载的效果工厂创建效果
+	std::shared_ptr<RelicEffect> getEffect(const std::string&);
+};
+#endif
+以下是InstantEffectFactory.h中的内容：
+#ifndef INSTANTEFFECTFACTORY_H
+#define INSTANTEFFECTFACTORY_H
+#include "InstantEffect.h"
+#include "nlohmann/json.hpp"
+#include <memory>
+class InstantEffectFactory{
+public:
+	//创建一个即时效果，需要的固定参数都由加载时内置
+	//可变参数由set()相关方法设置（需要时特化）
+	virtual std::shared_ptr<InstantEffect> create()=0;
+	virtual void loadFromJson(const nlohmann::json&)=0;
+	InstantEffectFactory()=default;
+	virtual ~InstantEffectFactory()=default;
+};
+template<typename T>
+class ConcreteInstantEffectFactory:public InstantEffectFactory{
+private:
+	nlohmann::json params;
+public:
+	std::shared_ptr<InstantEffect> create() override{
+		return std::make_shared<T>(params);
+	}
+	void loadFromJson(const nlohmann::json& p) override{
+		params=p;
 	}
 };
+
+
 #endif
 以下是InstantEffect.h中的内容：
 #ifndef INSTANTEFFECT_H
 #define INSTANTEFFECT_H
 #include <variant>
-#include <memory>
 #include "nlohmann/json.hpp"
-
 class Player;
 class InstantEffect{
 public:
 	InstantEffect()=default;
-	virtual void trigger(Player& player)const =0;
+	virtual void onApply(Player& player)const =0;
+	virtual ~InstantEffect(){}
 };
 
 class SpeedBoost:public InstantEffect{
 private:
 	float rate;
 public:
-	SpeedBoost(const float r):InstantEffect(){rate=r;}
-	void trigger(Player& player) const override;
+	SpeedBoost(const nlohmann::json& j):InstantEffect(){rate=j["rate"].get<float>();}
+	void onApply(Player& player) const override final;
+	virtual ~SpeedBoost() override;
 };
 
 class HealthBoost:public InstantEffect{
 private:
 	std::variant<int,float> value;
 public:
-	HealthBoost(const float r):InstantEffect(){value=r;}
-	HealthBoost(const int v):InstantEffect(){value=v;}
-	void trigger(Player& player) const override;
+	HealthBoost(const nlohmann::json& j):InstantEffect(){
+		if(j["value"].is_number_float()){
+			value=j["value"].get<float>();
+		}else{
+			value=j["value"].get<int>();
+		}
+	}
+	void onApply(Player& player) const override final;
+	virtual ~HealthBoost() override;
 };
 
-class InstantEffectFactory{
+#endif
+以下是RelicEffectFactory.h中的内容：
+#ifndef RELICEFFECTFACTORY_H
+#define RELICEFFECTFACTORY_H
+#include "RelicEffect.h"
+#include "nlohmann/json.hpp"
+#include <memory>
+class RelicEffectFactory{
 public:
-	virtual std::shared_ptr<InstantEffect> createFromJson(const nlohmann::json& json)=0;
-	virtual ~InstantEffectFactory();
+	virtual std::shared_ptr<RelicEffect> create()=0;
+	virtual void loadFromJson(const nlohmann::json&)=0;
+};
+template<typename T>
+class ConcreteRelicFactory:public RelicEffectFactory{
+private:
+	nlohmann::json params;
+public:
+	std::shared_ptr<RelicEffect> create() override{
+		return std::make_unique<T>(params);
+	}
+	void loadFromJson(const nlohmann::json& relic) override{
+		params=relic;
+	}
 };
 #endif
 以下是RelicEffect.h中的内容：
 #ifndef RELICEFFECT_H
 #define RELICEFFECT_H
-#include "Entity.h"
-#include "GameStageFwd.h"
 #include <string>
-
+class Entity;
 class RelicEffect{
 protected:
 	bool isActive=false;
 	std::string description;
 public:
+	RelicEffect()=default;
 	virtual ~RelicEffect()=default;
-	virtual void onTrigger(const Occasion& timing,Entity& relatedEntity)=0;
+	virtual void onTrigger(Entity& relatedEntity)=0;
 	virtual std::string getDescription() const{return description;}
 };
 
@@ -475,9 +554,14 @@ public:
 	void drawHPandEnergy() const override;
 };
 #endif
-以下是GameStageFwd.h中的内容：
-#ifndef GAMESTAGEFWD_H
-#define GAMESTAGEFWD_H
+以下是EventSystem.h中的内容：
+#ifndef EVENTSYSTEM_H
+#define EVENTSYSTEM_H
+#include "Effect/RelicEffect.h"
+#include <memory>
+#include <unordered_map>
+#include <vector>
+class Entity;
 enum class Occasion{
 	OnShoot,
 	OnHit,
@@ -485,8 +569,26 @@ enum class Occasion{
 	Always,
 	OnBattleStart,
 	OnPlayerHit,
-	OnHPThreshold
+	OnHPThreshold,
+	Undecided
 };
+class EventSystem{
+private:
+	EventSystem()=default;
+	~EventSystem()=default;
+	std::unordered_map<Occasion,std::vector<std::shared_ptr<RelicEffect>>> listeners;
+public:
+	//将某个遗物和事件绑定在一起
+	void bindRelicAndEvent(std::shared_ptr<RelicEffect>,Occasion);
+	//广播某事件
+	void broadcastEvent(Occasion);
+
+};
+#endif
+以下是GameStageFwd.h中的内容：
+#ifndef GAMESTAGEFWD_H
+#define GAMESTAGEFWD_H
+
 enum class GameStage{MainMenu,Battle,Victory,Defeat,Pause,EXIT};
 enum class EventSignal{IDLE,EXIT,RESTART};
 #endif
@@ -564,21 +666,20 @@ public:
 #ifndef REWARDSYSTEM_H
 #define REWARDSYSTEM_H
 
-#include <string>
 #include <memory>
-#include <vector>
-#include "nlohmann/json.hpp"
+#include <string>
 #include "Effect/InstantEffect.h"
 extern "C"{
 	#include "raylib.h"
 }
-
+class Entity;
 struct Reward{
 	std::string name;
 	std::string description;
-	std::vector<std::shared_ptr<InstantEffect>> effects;
+	std::shared_ptr<InstantEffect> effect;
 	Texture2D icon;
-	void getEffects(const nlohmann::json& j);
+	void applyToEntity(Entity& entity);
+	void getEffect(const std::string& id);
 };
 
 #endif
@@ -700,16 +801,18 @@ add_executable(${PROJECT_NAME})
 target_sources(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${HEADPATH})
 #依赖库，每次添加库组件都要在这里加上
-target_link_libraries(${PROJECT_NAME} PRIVATE raylib)
-target_link_libraries(${PROJECT_NAME} PRIVATE Entity)
-target_link_libraries(${PROJECT_NAME} PRIVATE Collision)
-target_link_libraries(${PROJECT_NAME} PRIVATE ResourceManager)
-target_link_libraries(${PROJECT_NAME} PRIVATE GameStage)
-target_link_libraries(${PROJECT_NAME} PRIVATE SpecialEffect)
-target_link_libraries(${PROJECT_NAME} PRIVATE UI)
-target_link_libraries(${PROJECT_NAME} PRIVATE UIComponent)
-target_link_libraries(${PROJECT_NAME} PRIVATE Data)
-target_link_libraries(${PROJECT_NAME} PRIVATE RewardSystem)
+target_link_libraries(${PROJECT_NAME} PRIVATE 
+	raylib
+	Entity
+	Collision
+	ResourceManager
+	GameStage
+	SpecialEffect
+	EffectManager
+	UIComponent
+	UI
+	Data
+	RewardSystem)
 target_link_directories(${PROJECT_NAME} PRIVATE ${LIBPATH})
 以下是CMakeLists.txt中的内容：
 #Collision中的CMakeLists.txt
@@ -750,7 +853,6 @@ bool Collision::checkIsTouchButton(const Button &aButton){
 	return CheckCollisionPointRec(GetMousePosition(), aButton.getRect());
 }
 以下是Bullet.cpp中的内容：
-#include "GameStageFwd.h"
 #include <algorithm>
 #include <memory>
 #include <string>
@@ -954,22 +1056,18 @@ void Enemy::drawHPandEnergy() const{
 以下是main.cpp中的内容：
 #ifndef ASSETS_IMAGE_PATH
 #define ASSETS_IMAGE_PATH
-#include "EffectFactories.h"
-#include "EffectRegistry.h"
-#include "GameStageFwd.h"
-#include "SpecialEffect.h"
-#include <memory>
+#include "DataManager.h"
 #endif
 
 extern "C" {
 	#include "raylib.h"
 }
-#include "Bullet.h"
-#include "Entity.h"
+#include "Effect/EffectManager.h"
+#include "EffectManager.h"
+#include "DataManager.h"
+#include "GameStageFwd.h"
 #include "ResourceManager.h"
 #include "GameStage.h"
-#include "Effect/EffectRegistry.h"
-#include "Effect/EffectFactories.h"
 
 const int WindowWidth=1280;
 const int WindowHeight=720;
@@ -1005,9 +1103,7 @@ int main(void){
 	CloseWindow();
 }
 void RegisterEffects(){
-	auto& registry=EffectRegistry::Get();
-	registry.registerFactory("SpeedBoost", std::make_unique<SpeedBoostFactory>());
-	registry.registerFactory("HealthBoost", std::make_unique<HealthBoostFactory>());
+	EffectManager::Get().loadEffects(DATA::EFFECT_PATH);
 }
 bool shouldEnd(){
 	if(WindowShouldClose()){return true;}
@@ -1034,6 +1130,7 @@ project(Managers)
 add_subdirectory(${SRC}/Managers/ResourceManager)
 add_subdirectory(${SRC}/Managers/GameStage)
 add_subdirectory(${SRC}/Managers/Data)
+add_subdirectory(${SRC}/Managers/Effect)
 以下是CMakeLists.txt中的内容：
 #Data中的CMakeLists.txt
 cmake_minimum_required(VERSION 3.5.0)
@@ -1072,9 +1169,7 @@ DataManager::DataManager(){
 			reward.name=item["name"].get<std::string>();
 			reward.description=autoSplit(item["description"].get<std::string>());
 			reward.icon=ResourceManager::Get().loadTexture(item["icon_path"].get<std::string>());
-			for(const auto& effect:item["effects"]){
-				reward.getEffects(effect);
-			}
+			reward.getEffect(item["effectID"].get<std::string>());
 			rewards.push_back(std::move(reward));
 		}
 	}
@@ -1092,6 +1187,76 @@ std::string autoSplit(const std::string& str){
 }
 const Reward& DataManager::getReward(const int i){
 	return rewards.at(i);
+}
+以下是CMakeLists.txt中的内容：
+#ResourceManager中的CMakeLists.txt
+cmake_minimum_required(VERSION 3.5.0)
+#每个依赖库的名字
+project(EffectManager)
+file(GLOB CURRENT_FILE ${PROJECT_SOURCE_DIR}/*.cpp)
+add_library(${PROJECT_NAME} STATIC ${CURRENT_FILE})
+target_include_directories(${PROJECT_NAME} PUBLIC ${HEADPATH})
+
+target_link_directories(${PROJECT_NAME} PRIVATE ${LIBPATH})
+以下是EffectManager.cpp中的内容：
+#include "Effect/EffectManager.h"
+#include "Effect/InstantEffect.h"
+#include "Effect/InstantEffectFactory.h"
+#include "Effect/RelicEffect.h"
+#include "Effect/RelicEffectFactory.h"
+#include <memory>
+using json = nlohmann::json;
+
+void EffectManager::loadEffects(const json& json) const {
+    InstantEffectLoader::Get().loadInstantEffect(json["InstantEffects"]);
+    RelicEffectLoader::Get().loadRelicEffect(json["RelicEffects"]);
+}
+
+std::shared_ptr<InstantEffect> EffectManager::getInstantEffect(const std::string& id) const {
+    return InstantEffectLoader::Get().getEffect(id);
+}
+
+std::shared_ptr<RelicEffect> EffectManager::getRelicEffect(const std::string& id) const {
+    return RelicEffectLoader::Get().getEffect(id);
+}
+void InstantEffectLoader::loadInstantEffect(const json& effects) {
+    std::string id, type;
+    for (const auto& effect : effects) {
+        id = effect["id"].get<std::string>();
+        type = effect["type"].get<std::string>();
+        std::unique_ptr<InstantEffectFactory> factory;
+        if (type == "SpeedBoost") {
+            factory = std::make_unique<ConcreteInstantEffectFactory<SpeedBoost>>();
+        } else {
+            // 其他类型处理
+        }
+        factory->loadFromJson(effect);
+        factories[id] = std::move(factory);
+    }
+}
+
+void RelicEffectLoader::loadRelicEffect(const json& relics) {
+    std::string id, type;
+    for (const auto& relic : relics) {
+        id = relic["id"].get<std::string>();
+        type = relic["type"].get<std::string>();
+        std::unique_ptr<RelicEffectFactory> factory;
+        if (type == "DoubleShootRelic") {
+            // 处理 DoubleShootRelic 类型
+        } else {
+            // 其他类型处理
+        }
+        factory->loadFromJson(relic);
+        factories[id] = std::move(factory);
+    }
+}
+
+std::shared_ptr<InstantEffect> InstantEffectLoader::getEffect(const std::string& id) {
+    return factories[id]->create();
+}
+
+std::shared_ptr<RelicEffect> RelicEffectLoader::getEffect(const std::string& id) {
+    return factories[id]->create();
 }
 以下是CMakeLists.txt中的内容：
 #StageController中的CMakeLists.txt
@@ -1311,20 +1476,13 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${HEADPATH})
 target_link_directories(${PROJECT_NAME} PRIVATE ${LIBPATH})
 以下是RewardSystem.cpp中的内容：
 #include "RewardSystem.h"
-#include "Effect/EffectRegistry.h"
-extern "C"{
-	#include "raylib.h"	
+#include "Effect/EffectManager.h"
+#include "Entity.h"
+void Reward::getEffect(const std::string& id){
+	EffectManager::Get().getInstantEffect(id);
 }
+void Reward::applyToEntity(Entity& entity){
 
-using json=nlohmann::json;
-
-void Reward::getEffects(const json& j){
-	std::string type=j["type"].get<std::string>();
-	if(auto effect=EffectRegistry::Get().createInstantEffect(type, j)){
-		effects.push_back(effect);
-	}else{
-		TraceLog(LOG_WARNING,"Unknown instant effect type: %s",type.c_str());
-	}
 }
 以下是BulletEffect.cpp中的内容：
 #include "Effect/BulletEffect.h"
@@ -1342,16 +1500,17 @@ project(SpecialEffect)
 file(GLOB CURRENT_FILE ${PROJECT_SOURCE_DIR}/*.cpp)
 add_library(${PROJECT_NAME} STATIC ${CURRENT_FILE})
 target_include_directories(${PROJECT_NAME} PUBLIC ${HEADPATH})
-
+target_include_directories(${PROJECT_NAME} PUBLIC ${HEADPATH}/Effect)
 target_link_directories(${PROJECT_NAME} PRIVATE ${LIBPATH})
 以下是InstantEffect.cpp中的内容：
 #include "Effect/InstantEffect.h"
 #include "Entity.h"
-void SpeedBoost::trigger(Player& player) const{
+
+void SpeedBoost::onApply(Player& player) const{
 	player.setAttackInterval(rate);
 }
 
-void HealthBoost::trigger(Player& player) const{
+void HealthBoost::onApply(Player& player) const{
 	const int* intPtr=std::get_if<int>(&value);
 	if(intPtr!=nullptr){
 		player.MaxHealthBoost(*intPtr);

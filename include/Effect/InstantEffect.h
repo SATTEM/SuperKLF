@@ -1,36 +1,55 @@
 #ifndef INSTANTEFFECT_H
 #define INSTANTEFFECT_H
+#include <raylib.h>
 #include <variant>
-#include <memory>
 #include "nlohmann/json.hpp"
-
-class Player;
+#include "Entity.h"
 class InstantEffect{
 public:
 	InstantEffect()=default;
-	virtual void trigger(Player& player)const =0;
+	virtual void onApply(Player& player)const =0;
+	virtual ~InstantEffect()=default;
+};
+class NullInstantEffect:public InstantEffect{
+public:
+	NullInstantEffect(const nlohmann::json& params):InstantEffect(){}
+	void onApply(Player& player) const override final{
+		TraceLog(LOG_WARNING, "Applying a NullInstantEffect");
+	}
+	virtual ~NullInstantEffect(){}
 };
 
 class SpeedBoost:public InstantEffect{
 private:
 	float rate;
 public:
-	SpeedBoost(const float r):InstantEffect(){rate=r;}
-	void trigger(Player& player) const override;
+	SpeedBoost(const nlohmann::json& params):InstantEffect(){rate=params["rate"].get<float>();}
+	void onApply(Player& player) const override final{
+		player.setAttackInterval(rate);
+	}
+	virtual ~SpeedBoost() override=default;
 };
 
 class HealthBoost:public InstantEffect{
 private:
 	std::variant<int,float> value;
 public:
-	HealthBoost(const float r):InstantEffect(){value=r;}
-	HealthBoost(const int v):InstantEffect(){value=v;}
-	void trigger(Player& player) const override;
+	HealthBoost(const nlohmann::json& params):InstantEffect(){
+		if(params["value"].is_number_float()){
+			value=params["value"].get<float>();
+		}else{
+			value=params["value"].get<int>();
+		}
+	}
+	void onApply(Player& player) const override final{
+		const int* intPtr=std::get_if<int>(&value);
+		if(intPtr!=nullptr){
+			player.MaxHealthBoost(*intPtr);
+		}else{
+			player.MaxHealthBoost(*(std::get_if<float>(&value)));
+		}
+	}
+	virtual ~HealthBoost()=default;
 };
 
-class InstantEffectFactory{
-public:
-	virtual std::shared_ptr<InstantEffect> createFromJson(const nlohmann::json& json)=0;
-	virtual ~InstantEffectFactory();
-};
 #endif

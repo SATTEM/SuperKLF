@@ -1,0 +1,26 @@
+{
+    "InstantEffects": [
+        {
+            "id": "speed_boost",
+            "type": "SpeedBoost",
+            "params": { "rate": 0.8 }
+        },
+        {
+            "id": "health_boost",
+            "type": "HealthBoost",
+            "params": { "value": 50 }
+        }
+    ],
+    "RelicEffects": [
+        {
+            "id": "double_shot",
+            "type": "ExtraBullet",
+            "params": { "bullet_path": "res/image/extra_bullet.png" }
+        },
+        {
+            "id":"nothing",
+            "type":"nothing",
+            "params":{}
+        }
+    ]
+}

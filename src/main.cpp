@@ -1,21 +1,17 @@
 #ifndef ASSETS_IMAGE_PATH
 #define ASSETS_IMAGE_PATH
-#include "EffectFactories.h"
-#include "EffectRegistry.h"
-#include "GameStageFwd.h"
-#include "SpecialEffect.h"
-#include <memory>
+#include <exception>
 #endif
 
 extern "C" {
 	#include "raylib.h"
 }
-#include "Bullet.h"
-#include "Entity.h"
+#include <fstream>
+#include "Effect/EffectManager.h"
+#include "DataManager.h"
+#include "GameStageFwd.h"
 #include "ResourceManager.h"
 #include "GameStage.h"
-#include "Effect/EffectRegistry.h"
-#include "Effect/EffectFactories.h"
 
 const int WindowWidth=1280;
 const int WindowHeight=720;
@@ -51,9 +47,9 @@ int main(void){
 	CloseWindow();
 }
 void RegisterEffects(){
-	auto& registry=EffectRegistry::Get();
-	registry.registerFactory("SpeedBoost", std::make_unique<SpeedBoostFactory>());
-	registry.registerFactory("HealthBoost", std::make_unique<HealthBoostFactory>());
+	std::ifstream file(DATA::EFFECT_PATH);
+	nlohmann::json effects=nlohmann::json::parse(file);
+	EffectManager::Get().loadEffects(effects);
 }
 bool shouldEnd(){
 	if(WindowShouldClose()){return true;}

@@ -55,6 +55,11 @@ void StageController::battleUpdate(){
 	player->Draw();
 	enemy->Draw();
 	currentStage=checkBattleStage(player, enemy);
+	if(currentStage==GameStage::Defeat){
+		TraceLog(LOG_INFO, "Battle Defeated");
+	}else if(currentStage==GameStage::Victory){
+		TraceLog(LOG_INFO, "Battle Victory");
+	}
 }
 const GameStage checkBattleStage(const Player* player,const Enemy* enemy){
 	if(!player->isAlive()){return GameStage::Defeat;}
@@ -85,9 +90,11 @@ void responseToSignalFromDefeat(const EventSignal signal){
 		case(EventSignal::RESTART):
 		ctrl.resetGame();
 		ctrl.transitionTo(GameStage::Battle);
+		TraceLog(LOG_INFO, "Restart game");
 		break;
 		case(EventSignal::EXIT):
 		ctrl.transitionTo(GameStage::MainMenu);
+		TraceLog(LOG_INFO, "Return to main menu");
 		break;
 		case(EventSignal::IDLE):
 		break;
