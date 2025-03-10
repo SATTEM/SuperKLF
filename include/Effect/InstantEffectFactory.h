@@ -3,6 +3,9 @@
 #include "InstantEffect.h"
 #include "nlohmann/json.hpp"
 #include <memory>
+extern "C"{
+	#include "raylib.h"
+}
 class InstantEffectFactory{
 public:
 	//创建一个即时效果，需要的固定参数都由加载时内置
@@ -19,6 +22,7 @@ private:
 	nlohmann::json params;
 public:
 	std::shared_ptr<InstantEffect> create() override{
+		TraceLog(LOG_INFO,"Creating instant effect: %s",typeid(T).name());
 		return std::make_shared<T>(params);
 	}
 	void loadFromJson(const nlohmann::json& p) override{

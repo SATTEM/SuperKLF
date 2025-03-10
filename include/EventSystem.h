@@ -3,7 +3,8 @@
 #include "Effect/RelicEffect.h"
 #include <memory>
 #include <unordered_map>
-#include <vector>
+#include <list>
+#include <algorithm>
 class Entity;
 enum class Occasion{
 	OnShoot,
@@ -19,12 +20,31 @@ class EventSystem{
 private:
 	EventSystem()=default;
 	~EventSystem()=default;
-	std::unordered_map<Occasion,std::vector<std::shared_ptr<RelicEffect>>> listeners;
+	std::unordered_map<Occasion,std::list<std::shared_ptr<RelicEffect>>> listeners;
 public:
-	//将某个遗物和事件绑定在一起
-	void bindRelicAndEvent(std::shared_ptr<RelicEffect>,Occasion);
+	static EventSystem& Get(){
+		static EventSystem instance;
+		return instance;
+	}
+	//将遗物，事件，实体绑定在一起
+	void bindRelicAndEvent(std::shared_ptr<RelicEffect>& relic,Occasion event){
+		listeners[event].push_back(relic);
+	}
 	//广播某事件
-	void broadcastEvent(Occasion);
+	void broadcastEvent(Occasion event,Entity& relatedEntity){
+		if(listeners.find(event)==listeners.end()){
+			listeners[event]={};
+		}
+		for(auto& relic:listeners[event]){
+			relic->onTrigger(relatedEntity);
+		}
+	}
+	//解除绑定
+	void unbindRelicAndEvent(std::shared_ptr<RelicEffect> relic,Occasion event){
+		auto it=std::find_if(listeners[event].begin(),listeners[event].end(),
+		[&relic](std::shared_ptr<RelicEffect>& iterator)->bool{return iterator==relic;});
+		listeners[event].erase(it);
+	}
 
 };
 #endif

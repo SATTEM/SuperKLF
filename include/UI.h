@@ -4,8 +4,6 @@
 #include "RewardSystem.h"
 #include <vector>
 #include "UIComponent.h"
-extern "C"{
-}
 namespace UI {
 	const int MAX_ENGLISH_EXPLAIN_LINE=24;
 }

@@ -56,6 +56,7 @@ VictoryUI::VictoryUI(){
 	}			
 }
 void VictoryUI::tryGenerateRewards(Player& player){
+	TraceLog(LOG_INFO,"Generating rewards");
 	player.deductMoney(DataManager::Get().getRefreshMoney());
 	std::random_device rd;
 	std::mt19937 gen(rd());
@@ -75,6 +76,7 @@ void VictoryUI::tryGenerateRewards(Player& player){
 	refreshBtn.setAddition("(-"+std::to_string(DataManager::Get().getRefreshMoney())+")");
 }
 void VictoryUI::chooseReward(const int i,Player& player){
+	TraceLog(LOG_INFO,"Choosing reward[%d]",i);
 	DataManager::Get().resetRefreshTimes();
 	Reward reward=currentRewards[i];
 }

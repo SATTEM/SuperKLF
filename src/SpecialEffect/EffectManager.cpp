@@ -78,7 +78,7 @@ void RelicEffectLoader::loadRelicEffect(const json& relics) {
 }
 void GenRelicEffectFactory(std::unique_ptr<RelicEffectFactory>& f,std::string type){
     if(type=="DoubleShootRelic"){
-        
+       f=std::make_unique<ConcreteRelicFactory<DoubleShootRelic>>(); 
     }else{
        f=std::make_unique<ConcreteRelicFactory<NullRelicEffect>>(); 
     }

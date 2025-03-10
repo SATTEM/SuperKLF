@@ -78,7 +78,7 @@ void tryFire(Entity& shooter,const float deltaTime){
 		attackTimer=0;
 		shooter.addEnergy(shooter.getEnergyRise());
 	}
-
+	EventSystem::Get().broadcastEvent(Occasion::OnShoot,shooter);
 }
 
 void updateBulletPool(std::vector<std::unique_ptr<Bullet>>& pool,const float deltaTime,Entity& shooter){

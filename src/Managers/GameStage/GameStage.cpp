@@ -41,10 +41,13 @@ void StageController::update(){
 		case(GameStage::Defeat):
 		defeatUpdate();
 		break;
+		case(GameStage::NextLevel):
+		nextLevel();
+		break;
 		case(GameStage::Pause):
 		pauseUpdate();
 		break;
-		case(GameStage::EXIT):
+		case(GameStage::Exit):
 		break;
 	}	
 }
@@ -56,9 +59,9 @@ void StageController::battleUpdate(){
 	enemy->Draw();
 	currentStage=checkBattleStage(player, enemy);
 	if(currentStage==GameStage::Defeat){
-		TraceLog(LOG_INFO, "Battle Defeated");
+		TraceLog(LOG_INFO, "[GameSystem] Battle Defeated");
 	}else if(currentStage==GameStage::Victory){
-		TraceLog(LOG_INFO, "Battle Victory");
+		TraceLog(LOG_INFO, "[GameSystem] Battle Victory");
 	}
 }
 const GameStage checkBattleStage(const Player* player,const Enemy* enemy){
@@ -90,11 +93,11 @@ void responseToSignalFromDefeat(const EventSignal signal){
 		case(EventSignal::RESTART):
 		ctrl.resetGame();
 		ctrl.transitionTo(GameStage::Battle);
-		TraceLog(LOG_INFO, "Restart game");
+		TraceLog(LOG_INFO, "[GameSystem] Restart game");
 		break;
 		case(EventSignal::EXIT):
 		ctrl.transitionTo(GameStage::MainMenu);
-		TraceLog(LOG_INFO, "Return to main menu");
+		TraceLog(LOG_INFO, "[GameSystem] Return to main menu");
 		break;
 		case(EventSignal::IDLE):
 		break;
@@ -115,13 +118,19 @@ void StageController::victoryUpdate(){
 		if(checkIsTouchButton(ui.getRewardBtn(i))){
 			if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
 				ui.chooseReward(i,*player);
+				currentStage=GameStage::NextLevel;
 			}
 		}
 	}
+}
+void StageController::nextLevel(){
+	TraceLog(LOG_INFO,"[GameSystem] Advancing to next Level");
+	TraceLog(LOG_WARNING,"Next level has not been developed yet");
+	transitionTo(GameStage::Battle);
 }
 void StageController::pauseUpdate(){
 
 }
 void StageController::mainMenuUpdate(){
-	transitionTo(GameStage::EXIT);
+	transitionTo(GameStage::Exit);
 }

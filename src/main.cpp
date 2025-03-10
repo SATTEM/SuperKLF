@@ -31,6 +31,7 @@ int main(void){
 	InitWindow(WindowWidth,WindowHeight,"SuperKLF");
 	StageController& state=StageController::Get();
 	ResourceManager& resMgr=ResourceManager::Get();
+	EventSystem& eventSys=EventSystem::Get();
 	std::unique_ptr<Player> player;
 	std::unique_ptr<Enemy> enemy;
 	entityInit(player, enemy);
@@ -53,7 +54,7 @@ void RegisterEffects(){
 }
 bool shouldEnd(){
 	if(WindowShouldClose()){return true;}
-	if(StageController::Get().getCurrentStage()==GameStage::EXIT){
+	if(StageController::Get().getCurrentStage()==GameStage::Exit){
 		return true;
 	}
 	return false;

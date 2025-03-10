@@ -13,13 +13,16 @@
     ],
     "RelicEffects": [
         {
-            "id": "double_shot",
-            "type": "ExtraBullet",
-            "params": { "bullet_path": "res/image/extra_bullet.png" }
+            "id": "double_shoot_relic",
+            "type": "DoubleShootRelic",
+            "params": { 
+                "bullet_path": "res/image/extra_bullet.png",
+                "description": "Shoot two bullets every time"
+         }
         },
         {
-            "id":"nothing",
-            "type":"nothing",
+            "id":" ",
+            "type":" ",
             "params":{}
         }
     ]

@@ -18,6 +18,7 @@ private:
 	void pauseUpdate();
 	void victoryUpdate();
 	void defeatUpdate();	
+	void nextLevel();
 public:
 	StageController(const StageController&)=delete;
 	void operator=(const StageController&)=delete;
