@@ -14,7 +14,7 @@ private:
 	nlohmann::json params;
 public:
 	std::shared_ptr<RelicEffect> create() override{
-		TraceLog(LOG_INFO,"Creating instant effect: %s",typeid(T).name());
+		TraceLog(LOG_INFO,"Creating relic effect: %s",typeid(T).name());
 		return std::make_unique<T>(params);
 	}
 	void loadFromJson(const nlohmann::json& relic) override{

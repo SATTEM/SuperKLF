@@ -8,6 +8,7 @@ extern "C" {
 }
 #include <fstream>
 #include "Effect/EffectManager.h"
+#include "Event/EventSystem.h"
 #include "DataManager.h"
 #include "GameStageFwd.h"
 #include "ResourceManager.h"
@@ -69,4 +70,6 @@ void entityInit(std::unique_ptr<Player>& player,std::unique_ptr<Enemy>& enemy){
 	enemy->setOpponent(*player);
 	enemy->addBullet({ ASSETS_IMAGE_PATH"pen.png"});
 	StageController::Get().bindEntities(*player, *enemy);	
+	player->addRelic(EffectManager::Get().getRelicEffect("double_shoot_relic"));
+	TraceLog(LOG_INFO,"Entities initialed");
 }

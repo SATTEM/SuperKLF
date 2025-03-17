@@ -1,6 +1,6 @@
 #ifndef BULLETEFFECT_H
 #define BULLETEFFECT_H
-#include "EventSystem.h"
+#include "../Event/EventFWD.h"
 class Entity;
 class BulletEffect{
 protected:

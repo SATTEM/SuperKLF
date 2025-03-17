@@ -9,6 +9,8 @@ extern "C"{
 #include <memory>
 #include <string>
 #include "Bullet.h"
+#include "Effect/RelicEffect.h"
+#include "Event/EventFWD.h"
 namespace GameInit{
 	const int Start_Money=33;
 }
@@ -24,6 +26,7 @@ protected:
 	std::vector<Bullet> bulletPattern;
 	std::size_t bulletIndex;
 	std::vector<std::unique_ptr<Bullet>> bulletPool;
+	std::vector<std::shared_ptr<RelicEffect>> relics;
 public:
 	explicit Entity(const std::string texPath,const Vector2& pos,const int hp=100
 	,const float interval=1,const int MAXenergy=100,const int rise=10
@@ -47,6 +50,7 @@ public:
 	void removeBullet(const int index){bulletPattern.erase(bulletPattern.begin()+index);}
 	void setBlast(Blast aBlast){blast=std::move(aBlast);}
 	void setOpponent(Entity& opp){opponent=&opp;}
+	void addRelic(std::shared_ptr<RelicEffect> relic);
 	float& getAttackTimer(){return attackTimer;}
 	float& getAttackInterVale(){return attackInterval;}
 	int& getEnergyRise(){return energyRise;}

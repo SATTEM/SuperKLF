@@ -5,6 +5,7 @@ extern "C"{
 	#include "raylib.h"
 }
 #include "nlohmann/json.hpp"
+#include "Event/EventFWD.h"
 class Entity;
 class RelicEffect{
 protected:
@@ -14,7 +15,8 @@ public:
 	RelicEffect()=default;
 	virtual ~RelicEffect()=default;
 	virtual void onTrigger(Entity& relatedEntity)=0;
-	virtual std::string getDescription() const{return description;}
+	const std::string getDescription() const{return description;}
+	virtual Occasion getOccasion() const=0;
 };
 class DoubleShootRelic:public RelicEffect{
 public:
@@ -24,6 +26,7 @@ public:
 	void onTrigger(Entity& relatedEntity) override final{
 		TraceLog(LOG_WARNING,"Triggering DoubleShootRelic(Not developed yet)");
 	}
+	Occasion getOccasion() const override final{return Occasion::OnShoot;}
 };
 class NullRelicEffect:public RelicEffect{
 public:
@@ -33,6 +36,7 @@ public:
 	void onTrigger(Entity& relatedEntity) override final{
 		TraceLog(LOG_WARNING, "Applying a NullRelicEffect");
 	}
+	Occasion getOccasion() const override final{return Occasion::Undecided;}
 	virtual ~NullRelicEffect()=default;
 };
 

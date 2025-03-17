@@ -2,7 +2,7 @@
 #include "Bullet.h"
 #include "ResourceManager.h"
 #include <memory>
-
+#include "Event/EventSystem.h"
 extern "C"{
 	#include "raylib.h"
 }
@@ -41,12 +41,17 @@ void Entity::fire(Vector2 pos){
 	bulletPool.push_back(bulletPattern[bulletIndex].shoot(pos));
 	bulletIndex=(bulletIndex+1) % bulletPattern.size();
 	addEnergy(energyRise);
+	EventSystem::Get().broadcastEvent(Occasion::OnShoot,*this);
 }
 void Entity::fireBlast(){
 	bulletPool.push_back(blast.shoot(position));
 	resetEnergy();
+	EventSystem::Get().broadcastEvent(Occasion::OnBlastShoot,*this);
 }
-
+void Entity::addRelic(std::shared_ptr<RelicEffect> relic){
+	relics.push_back(std::move(relic));
+	EventSystem::Get().bindRelicAndEvent(relics.back());
+}
 void Player::Update(const float deltaTime){
 	tryFire(*this, deltaTime);
 	updateBulletPool(bulletPool, deltaTime,*this);

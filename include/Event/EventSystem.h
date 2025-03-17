@@ -5,17 +5,9 @@
 #include <unordered_map>
 #include <list>
 #include <algorithm>
+#include "EventFWD.h"
 class Entity;
-enum class Occasion{
-	OnShoot,
-	OnHit,
-	Instant,
-	Always,
-	OnBattleStart,
-	OnPlayerHit,
-	OnHPThreshold,
-	Undecided
-};
+
 class EventSystem{
 private:
 	EventSystem()=default;
@@ -27,7 +19,8 @@ public:
 		return instance;
 	}
 	//将遗物，事件，实体绑定在一起
-	void bindRelicAndEvent(std::shared_ptr<RelicEffect>& relic,Occasion event){
+	void bindRelicAndEvent(std::shared_ptr<RelicEffect>& relic){
+		Occasion event=relic->getOccasion();
 		listeners[event].push_back(relic);
 	}
 	//广播某事件
