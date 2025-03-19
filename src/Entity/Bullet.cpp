@@ -1,3 +1,4 @@
+#include "Event/EventFWD.h"
 #include <algorithm>
 #include <memory>
 #include <string>
@@ -9,6 +10,7 @@ extern "C"{
 #include "Entity.h"
 #include "Collision.h"
 #include "ResourceManager.h"
+#include "Event/EventSystem.h"
 
 const bool isOutOfScreen(const Vector2& pos);
 
@@ -43,6 +45,7 @@ void Bullet::Update(const float deltaTime,Entity& shooter){
 	if(active&&!shouldRemove){
 		if(isOnShoot){
 			tryTriggerEffects(shooter, Occasion::OnShoot);
+			EventSystem::Get().broadcastEvent(Occasion::OnHit, shooter);
 			isOnShoot=false;
 		}
 		position.x+=velocity.x*deltaTime*BULLET::BASIC_SPEED;

@@ -10,15 +10,13 @@
 -->loadInstantEffect()
 -->getEffect()
 ->同理完成RelicEffectLoader
----------
 ->添加InvalidEffect
 ->实现EffectManager
 ->实现EventSystem
---------->定义Event、EventSystem，完成节点的广播行为
 -->实现bindRelicAndEvent()
 -->实现broadcastEvent()
 -->添加广播节点
-完成chooseReward()
+--------------------->完成chooseReward()
 ->实现Reward::applyToEntity()
 构建货币系统
 }

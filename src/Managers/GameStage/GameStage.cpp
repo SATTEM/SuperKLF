@@ -1,5 +1,7 @@
 #include "DataManager.h"
 #include "Entity.h"
+#include "Event/EventFWD.h"
+#include "Event/EventSystem.h"
 extern "C"{
 	#include "raylib.h"
 }
@@ -52,6 +54,12 @@ void StageController::update(){
 	}	
 }
 void StageController::battleUpdate(){
+	static bool newBattle=false;
+	if(newBattle){
+		EventSystem::Get().broadcastEvent(Occasion::OnBattleStart,*player);
+		EventSystem::Get().broadcastEvent(Occasion::OnBattleStart, *enemy);
+		newBattle=false;
+	}
 	float deltaTime=GetFrameTime();
 	player->Update(deltaTime);
 	enemy->Update(deltaTime);
@@ -62,6 +70,9 @@ void StageController::battleUpdate(){
 		TraceLog(LOG_INFO, "[GameSystem] Battle Defeated");
 	}else if(currentStage==GameStage::Victory){
 		TraceLog(LOG_INFO, "[GameSystem] Battle Victory");
+	}
+	if(currentStage!=GameStage::Battle&&currentStage!=GameStage::Pause){
+		newBattle=true;
 	}
 }
 const GameStage checkBattleStage(const Player* player,const Enemy* enemy){

@@ -56,24 +56,26 @@ VictoryUI::VictoryUI(){
 	}			
 }
 void VictoryUI::tryGenerateRewards(Player& player){
-	TraceLog(LOG_INFO,"Generating rewards");
-	player.deductMoney(DataManager::Get().getRefreshMoney());
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::uniform_int_distribution<> dis(0,DataManager::Get().getRewardSize()-1);
-	currentRewards.clear();
-	for(int i=0;i<3;i++){
-		currentRewards.push_back(DataManager::Get().getReward(dis(gen)));
-		rewardBtn[i].setText(currentRewards[i].name);
-		rewardBtn[i].setExplain(currentRewards[i].description);
+	bool success=player.deductMoney(DataManager::Get().getRefreshMoney());
+	if(success){
+		TraceLog(LOG_INFO,"Generating rewards");
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_int_distribution<> dis(0,DataManager::Get().getRewardSize()-1);
+		currentRewards.clear();
+		for(int i=0;i<3;i++){
+			currentRewards.push_back(DataManager::Get().getReward(dis(gen)));
+			rewardBtn[i].setText(currentRewards[i].name);
+			rewardBtn[i].setExplain(currentRewards[i].description);
+		}
+		DataManager::Get().refreshTimesAdvance();
+		if(player.getMoney()<=DataManager::Get().getRefreshMoney()){
+			refreshBtn.setAvailibility(false);
+		}else{
+			refreshBtn.setAvailibility(true);
+		}
+		refreshBtn.setAddition("(-"+std::to_string(DataManager::Get().getRefreshMoney())+")");
 	}
-	DataManager::Get().refreshTimesAdvance();
-	if(player.getMoney()<=DataManager::Get().getRefreshMoney()){
-		refreshBtn.setAvailibility(false);
-	}else{
-		refreshBtn.setAvailibility(true);
-	}
-	refreshBtn.setAddition("(-"+std::to_string(DataManager::Get().getRefreshMoney())+")");
 }
 void VictoryUI::chooseReward(const int i,Player& player){
 	TraceLog(LOG_INFO,"Choosing reward[%d]",i);

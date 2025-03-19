@@ -1,6 +1,8 @@
 #include "Entity.h"
 #include "Bullet.h"
+#include "Event/EventFWD.h"
 #include "ResourceManager.h"
+#include <algorithm>
 #include <memory>
 #include "Event/EventSystem.h"
 extern "C"{
@@ -10,7 +12,7 @@ extern "C"{
 void updateBulletPool(std::vector<std::unique_ptr<Bullet>>& pool,const float deltaTime,Entity& shooter);
 void tryFire(Entity& aEntity,const float deltaTime);
 void updateCollision(std::vector<std::unique_ptr<Bullet>>& pool,const float deltaTime,Entity& shooter);
-
+bool triggerHPThreshold(const int hp,const int maxHP);
 Entity::Entity(const std::string texPath,const Vector2& pos,const int hp,const float interval,const int MAXenergy,const int rise,const std::vector<Bullet>& pattern)
 		:position(pos),maxHP(hp),attackInterval(interval),
 		 attackTimer(0),energy(0),maxEnergy(MAXenergy),energyRise(rise),
@@ -52,6 +54,25 @@ void Entity::addRelic(std::shared_ptr<RelicEffect> relic){
 	relics.push_back(std::move(relic));
 	EventSystem::Get().bindRelicAndEvent(relics.back());
 }
+void Entity::takeDamage(const int damage){
+	currentHP=std::max(0,currentHP-damage);
+	if(triggerHPThreshold(currentHP, maxHP)){
+		EventSystem::Get().broadcastEvent(Occasion::OnHPThreshold, *this);
+	}
+}
+bool triggerHPThreshold(const int hp,const int maxHP){
+	if(hp==maxHP*0.75){
+		return true;
+	}else if(hp==maxHP/2){
+		return true;
+	}else if(hp==maxHP/3){
+		return true;
+	}else if(hp==maxHP/4){
+		return true;
+	}
+	return false;
+}
+/*--------------------------------------------------*/
 void Player::Update(const float deltaTime){
 	tryFire(*this, deltaTime);
 	updateBulletPool(bulletPool, deltaTime,*this);
@@ -67,6 +88,7 @@ void Player::drawHPandEnergy() const{
 	DrawRectangleLines(int(GetScreenWidth()/2), GetScreenHeight()-40, int(GetScreenWidth()/2), 40, BLACK);
 	DrawRectangle(int(GetScreenWidth()/2), GetScreenHeight()-40, int((float(energy)/maxEnergy)*(float(GetScreenWidth())/2)), 40, ORANGE);	
 }
+/*--------------------------------------------------*/
 void Enemy::Update(const float deltaTime){
 	tryFire(*this, deltaTime);
 	updateBulletPool(bulletPool, deltaTime,*this);

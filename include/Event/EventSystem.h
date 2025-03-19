@@ -18,12 +18,12 @@ public:
 		static EventSystem instance;
 		return instance;
 	}
-	//将遗物，事件，实体绑定在一起
+	//将遗物，事件绑定在一起
 	void bindRelicAndEvent(std::shared_ptr<RelicEffect>& relic){
 		Occasion event=relic->getOccasion();
 		listeners[event].push_back(relic);
 	}
-	//广播某事件
+	//广播某事件，同时传入相关的实体
 	void broadcastEvent(Occasion event,Entity& relatedEntity){
 		if(listeners.find(event)==listeners.end()){
 			listeners[event]={};

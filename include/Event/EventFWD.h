@@ -5,9 +5,7 @@ enum class Occasion{
 	OnBlastShoot,
 	OnHit,
 	Instant,
-	Always,
 	OnBattleStart,
-	OnPlayerHit,
 	OnHPThreshold,
 	Undecided
 };

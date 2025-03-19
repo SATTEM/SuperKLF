@@ -10,7 +10,6 @@ extern "C"{
 #include <string>
 #include "Bullet.h"
 #include "Effect/RelicEffect.h"
-#include "Event/EventFWD.h"
 namespace GameInit{
 	const int Start_Money=33;
 }
@@ -38,7 +37,7 @@ public:
 	virtual void drawHPandEnergy() const=0;
 	void fire(Vector2 pos={0,0});
 	void fireBlast();
-	void takeDamage(const int damage){currentHP=std::max(0,currentHP-damage);}
+	void takeDamage(const int damage);
 	bool isAlive() const {return currentHP>0;}
 	bool canCastSkill() const{return energy>=maxEnergy;}
 	void addEnergy(const int value){
