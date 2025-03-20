@@ -3,16 +3,18 @@
 #include "Entity.h"
 #include "GameStageFwd.h"
 #include <raylib.h>
+#include <memory>
 
 
 class StageController{
 private:
 	GameStage currentStage;
 	EventSignal signal;
-	Player* player;
-	Enemy* enemy;
+	std::unique_ptr<Player> player;
+	std::unique_ptr<Enemy> enemy;
 	StageController();
 	~StageController()=default;
+	void beginBattle();
 	void battleUpdate();
 	void mainMenuUpdate();
 	void pauseUpdate();
@@ -27,7 +29,9 @@ public:
 		return instance;
 	}
 	void resetGame();
-	void bindEntities(Player& p,Enemy& e){player=&p;enemy=&e;}
+	void bindEntities(std::unique_ptr<Player>&& p,std::unique_ptr<Enemy>&& e){player.reset(p.release());enemy.reset(e.release());}
+	Player& getPlayer(){return *player;}
+	Enemy& getEnemy(){return *enemy;}
 	void update();
 	const GameStage getCurrentStage() const {return currentStage;}
 	void transitionTo(const GameStage stage){currentStage=stage;}

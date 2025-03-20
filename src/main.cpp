@@ -25,24 +25,24 @@ using playerPtr=std::unique_ptr<Player>;
 using enemyPtr=std::unique_ptr<Enemy>;
 
 void RegisterEffects();
-void entityInit(std::unique_ptr<Player>&,std::unique_ptr<Enemy>&);
+void entityInit(std::unique_ptr<Player>&&,std::unique_ptr<Enemy>&&);
 bool shouldEnd();
 int main(void){
 	RegisterEffects();
 	InitWindow(WindowWidth,WindowHeight,"SuperKLF");
-	StageController& state=StageController::Get();
+	StageController& gameCTRL=StageController::Get();
 	ResourceManager& resMgr=ResourceManager::Get();
 	EventSystem& eventSys=EventSystem::Get();
 	std::unique_ptr<Player> player;
 	std::unique_ptr<Enemy> enemy;
-	entityInit(player, enemy);
+	entityInit(std::move(player), std::move(enemy));
 	SetTargetFPS(180);
-	state.transitionTo(GameStage::Battle);
+	gameCTRL.transitionTo(GameStage::Battle);
 	while(!shouldEnd()){
 		BeginDrawing();
 		ClearBackground(WHITE);
 		DrawFPS(0, 0);
-		state.update();
+		gameCTRL.update();
 		EndDrawing();
 	}
 	resMgr.cleanUp();
@@ -61,7 +61,7 @@ bool shouldEnd(){
 	return false;
 }
 
-void entityInit(std::unique_ptr<Player>& player,std::unique_ptr<Enemy>& enemy){
+void entityInit(std::unique_ptr<Player>&& player,std::unique_ptr<Enemy>&& enemy){
 	player.reset(new Player( ASSETS_IMAGE_PATH"player.png",playerPos,10,0.1,100,10));
 	enemy.reset(new Enemy { ASSETS_IMAGE_PATH"enemy.png",enemyPos});
 	player->setOpponent(*enemy);
@@ -69,7 +69,6 @@ void entityInit(std::unique_ptr<Player>& player,std::unique_ptr<Enemy>& enemy){
 	player->setBlast(Blast( ASSETS_IMAGE_PATH"warning.png",playerVel));
 	enemy->setOpponent(*player);
 	enemy->addBullet({ ASSETS_IMAGE_PATH"pen.png"});
-	StageController::Get().bindEntities(*player, *enemy);	
-	player->addRelic(EffectManager::Get().getRelicEffect("double_shoot_relic"));
+	StageController::Get().bindEntities(std::move(player),std::move(enemy));	
 	TraceLog(LOG_INFO,"Entities initialed");
 }

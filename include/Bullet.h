@@ -45,17 +45,19 @@ public:
 	Bullet(const Bullet& proto,const Vector2& begin);
 
 	std::unique_ptr<Bullet> shoot(const Vector2& begin);
-	void Draw() const;
 	void Update(const float deltaTime,Entity& shooter);
-	void checkHit(Entity& shooter);
-	void tryTriggerEffects(Entity& shooter,const Occasion& timing);
 	void addEffect(std::shared_ptr<BulletEffect> effect){effects.push_back(std::move(effect));}
 	void setDamage(const int dmg){damage=dmg;}
 	void setDrawScale(const float val){drawScale=val;}
-	void countColliderRadius(const Vector2 size=BULLET::BULLET_SIZE);
 	const Vector2 getColliderCentre() const {return {position.x+int(texture.width*drawScale/2),position.y+int(texture.height*drawScale/2)};}
 	const float getColliderRadius() const {return colliderRadius;}
 	const bool shouldBeRemoved() const{return shouldRemove;}
+private:
+	void Draw() const;
+	void checkHit(Entity& shooter);
+	void tryTriggerEffects(Entity& shooter,const Occasion& timing);
+protected:
+	void countColliderRadius(const Vector2 size=BULLET::BULLET_SIZE);
 };
 class Blast:public Bullet{
 

@@ -7,6 +7,10 @@
         {
             "id": "health_boost",
             "params": { "value": 50 }
+        },
+        {
+            "id":"new_relic",
+            "params":{}
         }
     ],
     "RelicEffects": [

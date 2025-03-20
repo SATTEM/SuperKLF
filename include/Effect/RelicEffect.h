@@ -18,16 +18,7 @@ public:
 	const std::string getDescription() const{return description;}
 	virtual Occasion getOccasion() const=0;
 };
-class DoubleShootRelic:public RelicEffect{
-public:
-	DoubleShootRelic(const nlohmann::json& params):RelicEffect(){
-		description=params["description"].get<std::string>();
-	}
-	void onTrigger(Entity& relatedEntity) override final{
-		TraceLog(LOG_WARNING,"Triggering DoubleShootRelic(Not developed yet)");
-	}
-	Occasion getOccasion() const override final{return Occasion::OnShoot;}
-};
+
 class NullRelicEffect:public RelicEffect{
 public:
 	NullRelicEffect(const nlohmann::json& params):RelicEffect(){
@@ -39,5 +30,13 @@ public:
 	Occasion getOccasion() const override final{return Occasion::Undecided;}
 	virtual ~NullRelicEffect()=default;
 };
+
+class DoubleShootRelic:public RelicEffect{
+public:
+	DoubleShootRelic(const nlohmann::json& params);
+	void onTrigger(Entity& relatedEntity) override final;
+	Occasion getOccasion() const override final{return Occasion::OnShoot;}
+};
+
 
 #endif

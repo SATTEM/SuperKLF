@@ -65,8 +65,8 @@ void VictoryUI::tryGenerateRewards(Player& player){
 		currentRewards.clear();
 		for(int i=0;i<3;i++){
 			currentRewards.push_back(DataManager::Get().getReward(dis(gen)));
-			rewardBtn[i].setText(currentRewards[i].name);
-			rewardBtn[i].setExplain(currentRewards[i].description);
+			rewardBtn[i].setText(currentRewards[i].getName());
+			rewardBtn[i].setExplain(currentRewards[i].getDescription());
 		}
 		DataManager::Get().refreshTimesAdvance();
 		if(player.getMoney()<=DataManager::Get().getRefreshMoney()){
@@ -81,6 +81,7 @@ void VictoryUI::chooseReward(const int i,Player& player){
 	TraceLog(LOG_INFO,"Choosing reward[%d]",i);
 	DataManager::Get().resetRefreshTimes();
 	Reward reward=currentRewards[i];
+	reward.apply(player);
 }
 
 void VictoryUI::Draw() const{

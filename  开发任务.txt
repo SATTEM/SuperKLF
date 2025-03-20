@@ -16,9 +16,9 @@
 -->实现bindRelicAndEvent()
 -->实现broadcastEvent()
 -->添加广播节点
---------------------->完成chooseReward()
-->实现Reward::applyToEntity()
-构建货币系统
+-->完成chooseReward()
+->实现Reward::apply()
+------------------------->构建货币系统
 }
 战斗中显示子弹序列
 搭建主菜单、暂停菜单

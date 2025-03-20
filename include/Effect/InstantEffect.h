@@ -23,10 +23,8 @@ class SpeedBoost:public InstantEffect{
 private:
 	float rate;
 public:
-	SpeedBoost(const nlohmann::json& params):InstantEffect(){rate=params["rate"].get<float>();}
-	void onApply(Player& player) const override final{
-		player.setAttackInterval(rate);
-	}
+	SpeedBoost(const nlohmann::json& params);
+	void onApply(Player& player) const override final;
 	virtual ~SpeedBoost() override=default;
 };
 
@@ -34,22 +32,19 @@ class HealthBoost:public InstantEffect{
 private:
 	std::variant<int,float> value;
 public:
-	HealthBoost(const nlohmann::json& params):InstantEffect(){
-		if(params["value"].is_number_float()){
-			value=params["value"].get<float>();
-		}else{
-			value=params["value"].get<int>();
-		}
-	}
-	void onApply(Player& player) const override final{
-		const int* intPtr=std::get_if<int>(&value);
-		if(intPtr!=nullptr){
-			player.MaxHealthBoost(*intPtr);
-		}else{
-			player.MaxHealthBoost(*(std::get_if<float>(&value)));
-		}
-	}
+	HealthBoost(const nlohmann::json& params);
+	void onApply(Player& player) const override final;
 	virtual ~HealthBoost()=default;
+};
+
+class NewRelic:public InstantEffect{
+private:
+	std::string relic_id;
+public:
+	NewRelic(const nlohmann::json& params);
+	void onApply(Player& player) const override final;
+	void setRelicID(const std::string& id);
+	virtual ~NewRelic()=default;
 };
 
 #endif

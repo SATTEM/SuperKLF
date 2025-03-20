@@ -15,7 +15,7 @@ using Collision::checkIsTouchButton;
 
 void responseToSignalFromDefeat(const EventSignal signal);
 void drawDefeatScreen(const DefeatUI& ui);
-const GameStage checkBattleStage(const Player* player,const Enemy* enemy);
+const GameStage checkBattleStage(const Player& player,const Enemy& enemy);
 
 StageController::StageController(){
 	currentStage=GameStage::MainMenu;
@@ -53,19 +53,22 @@ void StageController::update(){
 		break;
 	}	
 }
+void StageController::beginBattle(){
+	EventSystem::Get().broadcastEvent(Occasion::OnBattleStart,*player);
+	EventSystem::Get().broadcastEvent(Occasion::OnBattleStart, *enemy);
+	player->reset();
+	enemy->reset();
+}
 void StageController::battleUpdate(){
 	static bool newBattle=false;
 	if(newBattle){
-		EventSystem::Get().broadcastEvent(Occasion::OnBattleStart,*player);
-		EventSystem::Get().broadcastEvent(Occasion::OnBattleStart, *enemy);
+		beginBattle();
 		newBattle=false;
 	}
 	float deltaTime=GetFrameTime();
 	player->Update(deltaTime);
 	enemy->Update(deltaTime);
-	player->Draw();
-	enemy->Draw();
-	currentStage=checkBattleStage(player, enemy);
+	currentStage=checkBattleStage(*player, *enemy);
 	if(currentStage==GameStage::Defeat){
 		TraceLog(LOG_INFO, "[GameSystem] Battle Defeated");
 	}else if(currentStage==GameStage::Victory){
@@ -75,9 +78,9 @@ void StageController::battleUpdate(){
 		newBattle=true;
 	}
 }
-const GameStage checkBattleStage(const Player* player,const Enemy* enemy){
-	if(!player->isAlive()){return GameStage::Defeat;}
-	if(!enemy->isAlive()){return GameStage::Victory;}
+const GameStage checkBattleStage(const Player& player,const Enemy& enemy){
+	if(!player.isAlive()){return GameStage::Defeat;}
+	if(!enemy.isAlive()){return GameStage::Victory;}
 	return GameStage::Battle;
 }
 void StageController::defeatUpdate(){

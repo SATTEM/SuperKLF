@@ -32,38 +32,21 @@
 │   ├── RewardSystem.h
 │   ├── UIComponent.h
 │   └── UI.h
-├── libs
-│   ├── libCollision.a
-│   ├── libData.a
-│   ├── libEntity.a
-│   ├── libGameStage.a
-│   ├── libraylib.so.5.5.0
-│   ├── libResourceManager.a
-│   ├── libRewardSystem.a
-│   ├── libSpecialEffect.a
-│   ├── libUI.a
-│   └── libUIComponent.a
 ├── outline
-├── priority.txt
 ├── res
 │   ├── data
 │   │   ├── Effects.json
 │   │   └── rewards.json
-│   ├── enemy.png
-│   ├── fallback.png
-│   ├── image
-│   │   ├── attack_speed.png
-│   │   ├── enemy.png
-│   │   ├── exit.png
-│   │   ├── fallback.png
-│   │   ├── health_boost.png
-│   │   ├── pen.png
-│   │   ├── player.png
-│   │   ├── restart.png
-│   │   └── warning.png
-│   ├── pen.png
-│   ├── player.png
-│   └── warning.png
+│   └── image
+│       ├── attack_speed.png
+│       ├── enemy.png
+│       ├── exit.png
+│       ├── fallback.png
+│       ├── health_boost.png
+│       ├── pen.png
+│       ├── player.png
+│       ├── restart.png
+│       └── warning.png
 ├── sourcecode.doc
 └── src
     ├── CMakeLists.txt
@@ -92,7 +75,9 @@
     ├── SpecialEffect
     │   ├── BulletEffect.cpp
     │   ├── CMakeLists.txt
-    │   └── EffectManager.cpp
+    │   ├── EffectManager.cpp
+    │   ├── InstantEffect.cpp
+    │   └── RelicEffect.cpp
     └── UI
         ├── CMakeLists.txt
         ├── UIComponent
@@ -100,7 +85,7 @@
         │   └── UIComponent.cpp
         └── UI.cpp
 
-21 directories, 79 files
+20 directories, 65 files
 以下是开发任务.txt中的内容：
 
 以下是CMakeLists.txt中的内容：
@@ -181,17 +166,19 @@ public:
 	Bullet(const Bullet& proto,const Vector2& begin);
 
 	std::unique_ptr<Bullet> shoot(const Vector2& begin);
-	void Draw() const;
 	void Update(const float deltaTime,Entity& shooter);
-	void checkHit(Entity& shooter);
-	void tryTriggerEffects(Entity& shooter,const Occasion& timing);
 	void addEffect(std::shared_ptr<BulletEffect> effect){effects.push_back(std::move(effect));}
 	void setDamage(const int dmg){damage=dmg;}
 	void setDrawScale(const float val){drawScale=val;}
-	void countColliderRadius(const Vector2 size=BULLET::BULLET_SIZE);
 	const Vector2 getColliderCentre() const {return {position.x+int(texture.width*drawScale/2),position.y+int(texture.height*drawScale/2)};}
 	const float getColliderRadius() const {return colliderRadius;}
 	const bool shouldBeRemoved() const{return shouldRemove;}
+private:
+	void Draw() const;
+	void checkHit(Entity& shooter);
+	void tryTriggerEffects(Entity& shooter,const Occasion& timing);
+protected:
+	void countColliderRadius(const Vector2 size=BULLET::BULLET_SIZE);
 };
 class Blast:public Bullet{
 
@@ -299,12 +286,15 @@ public:
 #include "RelicEffectFactory.h"
 #include <memory>
 #include <string>
+#include <map>
 #include <unordered_map>
 
 class EffectManager{
 private:
 	EffectManager()=default;
 	~EffectManager()=default;
+	std::map<int,std::string> instantIDs;
+	std::map<int,std::string> relicIDs;
 public:
 	EffectManager(const EffectManager&)=delete;
 	void operator=(const EffectManager&)=delete;
@@ -312,12 +302,19 @@ public:
 		static EffectManager instance;
 		return instance;
 	}
-	//分发加载任务
-	void loadEffects(const nlohmann::json&)const;
+	//分发加载任务并获得所有效果id的集合
+	void loadEffects(const nlohmann::json&);
 	//从InstantEffectLoader获取一个即时效果
 	std::shared_ptr<InstantEffect> getInstantEffect(const std::string&)const;
+	std::shared_ptr<InstantEffect> getInstantEffect(const int index)const;
 	//Relic效果同理
 	std::shared_ptr<RelicEffect> getRelicEffect(const std::string&) const;
+	std::shared_ptr<RelicEffect> getRelicEffect(const int index)const;
+	//检查是否已经加载了效果
+	bool isInstantEffectLoaded(const std::string& id) const;
+	bool isRelicEffectLoaded(const std::string& id) const;
+	const std::map<int,std::string>& getInstantEffectMap()const{return instantIDs;}
+	const std::map<int,std::string>& getRelicEffectMap()const{return relicIDs;}
 };
 class InstantEffectLoader{
 private:
@@ -332,9 +329,11 @@ public:
 		return instance;
 	}
 	//加载json中即时效果数组的每一个元素的工厂
-	void loadInstantEffect(const nlohmann::json& effects);
+	std::map<int,std::string> loadInstantEffect(const nlohmann::json& effects);
 	//通过已加载的效果工厂创建效果
 	std::shared_ptr<InstantEffect> getEffect(const std::string&);
+	//检查是否存在某效果
+	bool isEffectLoaded(const std::string& id) const;
 };
 //RelicEffect
 class RelicEffectLoader{
@@ -350,9 +349,11 @@ public:
 		return instance;
 	}
 	//加载json中遗物效果数组的每一个元素
-	void loadRelicEffect(const nlohmann::json& json);
+	std::map<int,std::string> loadRelicEffect(const nlohmann::json& json);
 	//通过已加载的效果工厂创建效果
 	std::shared_ptr<RelicEffect> getEffect(const std::string&);
+	//检查是否存在某效果
+	bool isEffectLoaded(const std::string& id)const;
 };
 #endif
 以下是InstantEffectFactory.h中的内容：
@@ -416,10 +417,8 @@ class SpeedBoost:public InstantEffect{
 private:
 	float rate;
 public:
-	SpeedBoost(const nlohmann::json& params):InstantEffect(){rate=params["rate"].get<float>();}
-	void onApply(Player& player) const override final{
-		player.setAttackInterval(rate);
-	}
+	SpeedBoost(const nlohmann::json& params);
+	void onApply(Player& player) const override final;
 	virtual ~SpeedBoost() override=default;
 };
 
@@ -427,22 +426,19 @@ class HealthBoost:public InstantEffect{
 private:
 	std::variant<int,float> value;
 public:
-	HealthBoost(const nlohmann::json& params):InstantEffect(){
-		if(params["value"].is_number_float()){
-			value=params["value"].get<float>();
-		}else{
-			value=params["value"].get<int>();
-		}
-	}
-	void onApply(Player& player) const override final{
-		const int* intPtr=std::get_if<int>(&value);
-		if(intPtr!=nullptr){
-			player.MaxHealthBoost(*intPtr);
-		}else{
-			player.MaxHealthBoost(*(std::get_if<float>(&value)));
-		}
-	}
+	HealthBoost(const nlohmann::json& params);
+	void onApply(Player& player) const override final;
 	virtual ~HealthBoost()=default;
+};
+
+class NewRelic:public InstantEffect{
+private:
+	std::string relic_id;
+public:
+	NewRelic(const nlohmann::json& params);
+	void onApply(Player& player) const override final;
+	void setRelicID(const std::string& id);
+	virtual ~NewRelic()=default;
 };
 
 #endif
@@ -492,16 +488,7 @@ public:
 	const std::string getDescription() const{return description;}
 	virtual Occasion getOccasion() const=0;
 };
-class DoubleShootRelic:public RelicEffect{
-public:
-	DoubleShootRelic(const nlohmann::json& params):RelicEffect(){
-		description=params["description"].get<std::string>();
-	}
-	void onTrigger(Entity& relatedEntity) override final{
-		TraceLog(LOG_WARNING,"Triggering DoubleShootRelic(Not developed yet)");
-	}
-	Occasion getOccasion() const override final{return Occasion::OnShoot;}
-};
+
 class NullRelicEffect:public RelicEffect{
 public:
 	NullRelicEffect(const nlohmann::json& params):RelicEffect(){
@@ -513,6 +500,14 @@ public:
 	Occasion getOccasion() const override final{return Occasion::Undecided;}
 	virtual ~NullRelicEffect()=default;
 };
+
+class DoubleShootRelic:public RelicEffect{
+public:
+	DoubleShootRelic(const nlohmann::json& params);
+	void onTrigger(Entity& relatedEntity) override final;
+	Occasion getOccasion() const override final{return Occasion::OnShoot;}
+};
+
 
 #endif
 以下是Entity.h中的内容：
@@ -551,17 +546,11 @@ public:
 
 	~Entity()=default;
 	virtual void Update(const float deltaTime)=0;
-	virtual void Draw() const =0;
-	virtual void drawHPandEnergy() const=0;
 	void fire(Vector2 pos={0,0});
 	void fireBlast();
 	void takeDamage(const int damage);
 	bool isAlive() const {return currentHP>0;}
 	bool canCastSkill() const{return energy>=maxEnergy;}
-	void addEnergy(const int value){
-		energy=std::clamp(energy+value,0,maxEnergy);
-	}
-	void resetEnergy(){energy=0;}
 	void reset();
 	void addBullet(Bullet aBullet){bulletPattern.push_back(std::move(aBullet));}
 	void removeBullet(const int index){bulletPattern.erase(bulletPattern.begin()+index);}
@@ -570,13 +559,16 @@ public:
 	void addRelic(std::shared_ptr<RelicEffect> relic);
 	float& getAttackTimer(){return attackTimer;}
 	float& getAttackInterVale(){return attackInterval;}
-	int& getEnergyRise(){return energyRise;}
 	Entity& getOpponent(){return *opponent;}
 	const int getEnergy() const{return energy;}
 	const int getHP() const{return currentHP;}
 	const int getMaxEnergy() const{return maxEnergy;}
 	const Rectangle& getCollider() const{return boxCollider;}
-
+private:
+	void addEnergy(const int value){energy=std::clamp(energy+value,0,maxEnergy);}
+	virtual void Draw() const =0;
+	virtual void drawHPandEnergy() const=0;
+	void resetEnergy(){energy=0;}
 };
 
 class Player:public Entity{
@@ -587,8 +579,6 @@ public:
 	,const float interval=1,const int MAXenergy=100,const int rise=10)
 	:Entity(texPath,pos,hp,interval,MAXenergy,rise){}
 	void Update(const float deltaTime) override;
-	void Draw() const override;
-	void drawHPandEnergy() const override;
 	void setAttackInterval(const float rate){attackInterval*=rate;}
 	void MaxHealthBoost(const int val){maxHP+=val;}
 	void MaxHealthBoost(const float rate){maxHP*=rate;}
@@ -598,6 +588,9 @@ public:
 		else{money-=value;return true;}
 	}
 	const int getMoney() const{return money;}
+private:
+	void Draw() const override;
+	void drawHPandEnergy() const override;
 };
 
 class Enemy:public Entity{
@@ -606,6 +599,7 @@ public:
 	,const float interval=1,const int MAXenergy=100,const int rise=10)
 	:Entity(texPath,pos,hp,interval,MAXenergy,rise){}
 	void Update(const float deltaTime) override;
+private:
 	void Draw() const override;
 	void drawHPandEnergy() const override;
 };
@@ -680,16 +674,18 @@ enum class EventSignal{IDLE,EXIT,RESTART};
 #include "Entity.h"
 #include "GameStageFwd.h"
 #include <raylib.h>
+#include <memory>
 
 
 class StageController{
 private:
 	GameStage currentStage;
 	EventSignal signal;
-	Player* player;
-	Enemy* enemy;
+	std::unique_ptr<Player> player;
+	std::unique_ptr<Enemy> enemy;
 	StageController();
 	~StageController()=default;
+	void beginBattle();
 	void battleUpdate();
 	void mainMenuUpdate();
 	void pauseUpdate();
@@ -704,7 +700,9 @@ public:
 		return instance;
 	}
 	void resetGame();
-	void bindEntities(Player& p,Enemy& e){player=&p;enemy=&e;}
+	void bindEntities(std::unique_ptr<Player>&& p,std::unique_ptr<Enemy>&& e){player.reset(p.release());enemy.reset(e.release());}
+	Player& getPlayer(){return *player;}
+	Enemy& getEnemy(){return *enemy;}
 	void update();
 	const GameStage getCurrentStage() const {return currentStage;}
 	void transitionTo(const GameStage stage){currentStage=stage;}
@@ -753,19 +751,24 @@ public:
 #include <memory>
 #include <string>
 #include "Effect/InstantEffect.h"
+#include "Entity.h"
 extern "C"{
 	#include "raylib.h"
 }
 class Entity;
-struct Reward{
+class Reward{
+protected:
 	std::string name;
 	std::string description;
 	std::shared_ptr<InstantEffect> effect;
 	Texture2D icon;
-	void applyToEntity(Entity& entity);
-	void getEffect(const std::string& id);
+public:
+	Reward(const nlohmann::json& reward);
+	~Reward()=default;
+	void apply(Player& player);
+	const std::string& getDescription()const{return description;}
+	const std::string& getName()const{return name;}
 };
-
 #endif
 以下是UIComponent.h中的内容：
 #ifndef UICOMPONENT_H
@@ -874,9 +877,6 @@ public:
 };
 
 #endif
-以下是priority.txt中的内容：
-EventSystem
-NextLevel
 以下是CMakeLists.txt中的内容：
 #./src的CMakeLists.txt
 cmake_minimum_required(VERSION 3.5.0)
@@ -1112,6 +1112,7 @@ bool triggerHPThreshold(const int hp,const int maxHP){
 void Player::Update(const float deltaTime){
 	tryFire(*this, deltaTime);
 	updateBulletPool(bulletPool, deltaTime,*this);
+	Draw();
 }
 void Player::Draw() const {
 	DrawTextureV(texture,position,WHITE);
@@ -1128,6 +1129,7 @@ void Player::drawHPandEnergy() const{
 void Enemy::Update(const float deltaTime){
 	tryFire(*this, deltaTime);
 	updateBulletPool(bulletPool, deltaTime,*this);
+	Draw();
 }
 void tryFire(Entity& shooter,const float deltaTime){
 	float& attackTimer=shooter.getAttackTimer();
@@ -1139,7 +1141,6 @@ void tryFire(Entity& shooter,const float deltaTime){
 	if(attackTimer>=attackInterval){
 		shooter.fire();
 		attackTimer=0;
-		shooter.addEnergy(shooter.getEnergyRise());
 	}
 	EventSystem::Get().broadcastEvent(Occasion::OnShoot,shooter);
 }
@@ -1195,24 +1196,24 @@ using playerPtr=std::unique_ptr<Player>;
 using enemyPtr=std::unique_ptr<Enemy>;
 
 void RegisterEffects();
-void entityInit(std::unique_ptr<Player>&,std::unique_ptr<Enemy>&);
+void entityInit(std::unique_ptr<Player>&&,std::unique_ptr<Enemy>&&);
 bool shouldEnd();
 int main(void){
 	RegisterEffects();
 	InitWindow(WindowWidth,WindowHeight,"SuperKLF");
-	StageController& state=StageController::Get();
+	StageController& gameCTRL=StageController::Get();
 	ResourceManager& resMgr=ResourceManager::Get();
 	EventSystem& eventSys=EventSystem::Get();
 	std::unique_ptr<Player> player;
 	std::unique_ptr<Enemy> enemy;
-	entityInit(player, enemy);
+	entityInit(std::move(player), std::move(enemy));
 	SetTargetFPS(180);
-	state.transitionTo(GameStage::Battle);
+	gameCTRL.transitionTo(GameStage::Battle);
 	while(!shouldEnd()){
 		BeginDrawing();
 		ClearBackground(WHITE);
 		DrawFPS(0, 0);
-		state.update();
+		gameCTRL.update();
 		EndDrawing();
 	}
 	resMgr.cleanUp();
@@ -1231,7 +1232,7 @@ bool shouldEnd(){
 	return false;
 }
 
-void entityInit(std::unique_ptr<Player>& player,std::unique_ptr<Enemy>& enemy){
+void entityInit(std::unique_ptr<Player>&& player,std::unique_ptr<Enemy>&& enemy){
 	player.reset(new Player( ASSETS_IMAGE_PATH"player.png",playerPos,10,0.1,100,10));
 	enemy.reset(new Enemy { ASSETS_IMAGE_PATH"enemy.png",enemyPos});
 	player->setOpponent(*enemy);
@@ -1239,8 +1240,7 @@ void entityInit(std::unique_ptr<Player>& player,std::unique_ptr<Enemy>& enemy){
 	player->setBlast(Blast( ASSETS_IMAGE_PATH"warning.png",playerVel));
 	enemy->setOpponent(*player);
 	enemy->addBullet({ ASSETS_IMAGE_PATH"pen.png"});
-	StageController::Get().bindEntities(*player, *enemy);	
-	player->addRelic(EffectManager::Get().getRelicEffect("double_shoot_relic"));
+	StageController::Get().bindEntities(std::move(player),std::move(enemy));	
 	TraceLog(LOG_INFO,"Entities initialed");
 }
 以下是CMakeLists.txt中的内容：
@@ -1262,7 +1262,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${HEADPATH})
 target_link_directories(${PROJECT_NAME} PRIVATE ${LIBPATH})
 以下是DataManager.cpp中的内容：
 #include "DataManager.h"
-#include "ResourceManager.h"
+#include "RewardSystem.h"
 #include "nlohmann/json.hpp"
 #include <fstream>
 #include <string>
@@ -1271,8 +1271,6 @@ extern "C"{
 }
 
 using json= nlohmann::json;
-
-std::string autoSplit(const std::string&);
 const int DataManager::getCoinsEarned() const{
 	return DATA::BASIC_COINS_EARNED*DATA::BASIC_COINS_RATE*passedLevel;
 }
@@ -1284,27 +1282,12 @@ DataManager::DataManager(){
 		json data=json::parse(file);
 		rewards.reserve(data.size());
 		for(auto& item :data){
-			Reward reward;
-			reward.name=item["name"].get<std::string>();
-			reward.description=autoSplit(item["description"].get<std::string>());
-			reward.icon=ResourceManager::Get().loadTexture(item["icon_path"].get<std::string>());
-			reward.getEffect(item["effectID"].get<std::string>());
-			rewards.push_back(std::move(reward));
+			rewards.push_back({item});
 			TraceLog(LOG_INFO, "[RES] Reward Loaded: %s",item["name"].get<std::string>().c_str());
 		}
 	}
 }
-std::string autoSplit(const std::string& str){
-	std::string newStr;
-	for(int i=0;i<str.length();i++){
-		newStr+=str[i];
-		if(i%26==0&&i!=0){
-			newStr+='\n';
-		}
-	}
-	newStr+='\0';
-	return newStr;
-}
+
 const Reward& DataManager::getReward(const int i){
 	return rewards.at(i);
 }
@@ -1336,7 +1319,7 @@ using Collision::checkIsTouchButton;
 
 void responseToSignalFromDefeat(const EventSignal signal);
 void drawDefeatScreen(const DefeatUI& ui);
-const GameStage checkBattleStage(const Player* player,const Enemy* enemy);
+const GameStage checkBattleStage(const Player& player,const Enemy& enemy);
 
 StageController::StageController(){
 	currentStage=GameStage::MainMenu;
@@ -1374,19 +1357,22 @@ void StageController::update(){
 		break;
 	}	
 }
+void StageController::beginBattle(){
+	EventSystem::Get().broadcastEvent(Occasion::OnBattleStart,*player);
+	EventSystem::Get().broadcastEvent(Occasion::OnBattleStart, *enemy);
+	player->reset();
+	enemy->reset();
+}
 void StageController::battleUpdate(){
 	static bool newBattle=false;
 	if(newBattle){
-		EventSystem::Get().broadcastEvent(Occasion::OnBattleStart,*player);
-		EventSystem::Get().broadcastEvent(Occasion::OnBattleStart, *enemy);
+		beginBattle();
 		newBattle=false;
 	}
 	float deltaTime=GetFrameTime();
 	player->Update(deltaTime);
 	enemy->Update(deltaTime);
-	player->Draw();
-	enemy->Draw();
-	currentStage=checkBattleStage(player, enemy);
+	currentStage=checkBattleStage(*player, *enemy);
 	if(currentStage==GameStage::Defeat){
 		TraceLog(LOG_INFO, "[GameSystem] Battle Defeated");
 	}else if(currentStage==GameStage::Victory){
@@ -1396,9 +1382,9 @@ void StageController::battleUpdate(){
 		newBattle=true;
 	}
 }
-const GameStage checkBattleStage(const Player* player,const Enemy* enemy){
-	if(!player->isAlive()){return GameStage::Defeat;}
-	if(!enemy->isAlive()){return GameStage::Victory;}
+const GameStage checkBattleStage(const Player& player,const Enemy& enemy){
+	if(!player.isAlive()){return GameStage::Defeat;}
+	if(!enemy.isAlive()){return GameStage::Victory;}
 	return GameStage::Battle;
 }
 void StageController::defeatUpdate(){
@@ -1554,13 +1540,65 @@ target_link_directories(${PROJECT_NAME} PRIVATE ${LIBPATH})
 以下是RewardSystem.cpp中的内容：
 #include "RewardSystem.h"
 #include "Effect/EffectManager.h"
+#include "Effect/InstantEffect.h"
 #include "Entity.h"
-void Reward::getEffect(const std::string& id){
-	effect=EffectManager::Get().getInstantEffect(id);
-}
-void Reward::applyToEntity(Entity& entity){
+#include <memory>
+#include <random>
+#include <string>
+#include "ResourceManager.h"
+#include <cctype>
 
+std::string autoSplit(const std::string&);
+std::string transRelicIDToName(const std::string&);
+
+Reward::Reward(const nlohmann::json& reward){
+	name=reward["name"].get<std::string>();
+	description=autoSplit(reward["description"].get<std::string>());
+	icon=ResourceManager::Get().loadTexture(reward["icon_path"].get<std::string>());
+	effect=EffectManager::Get().getInstantEffect(reward["effectID"].get<std::string>());
+	if(name=="NewRelic"){
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_int_distribution<> dis(0,EffectManager::Get().getRelicEffectMap().size()-1);
+		int randomIndex=dis(gen);
+		std::string relic_id=EffectManager::Get().getRelicEffectMap().at(randomIndex);
+		std::dynamic_pointer_cast<NewRelic>(effect)->setRelicID(relic_id);
+		std::string relic_name=transRelicIDToName(relic_id);
+		name="Relic: "+relic_name;
+		description=autoSplit(reward["description"].get<std::string>()+relic_name);
+		icon=ResourceManager::Get().loadTexture(ASSETS_IMAGE_PATH+relic_id+".png");
+	}
 }
+
+std::string autoSplit(const std::string& str){
+	std::string newStr;
+	for(int i=0;i<str.length();i++){
+		newStr+=str[i];
+		if(i%26==0&&i!=0&&str[i]!='\n'){
+			newStr+='\n';
+		}
+	}
+	newStr+='\0';
+	return newStr;
+}
+void Reward::apply(Player& player){
+	effect->onApply(player);
+}
+
+std::string transRelicIDToName(const std::string& id){
+	std::string name=id;
+	for(auto it=name.begin();it!=name.end();it++){
+		if(*(it-1)=='_'||it==name.begin()){
+			*it=std::toupper(*it);
+		}
+		if(*it=='_'){
+			it=name.erase(it);
+		}
+	}
+	return name;
+}
+
+
 以下是BulletEffect.cpp中的内容：
 #include "Effect/BulletEffect.h"
 #include "Entity.h"
@@ -1586,22 +1624,29 @@ target_link_directories(${PROJECT_NAME} PRIVATE ${LIBPATH})
 #include "Effect/RelicEffectFactory.h"
 #include <memory>
 #include <raylib.h>
+#include <string>
 using json = nlohmann::json;
 //InstantEffectFactory的分派函数
 void GenInstantEffectFactory(std::unique_ptr<InstantEffectFactory>& f,std::string id);
 //RelicEffectFactory的分派函数
 void GenRelicEffectFactory(std::unique_ptr<RelicEffectFactory>& f,std::string id);
 
-void EffectManager::loadEffects(const json& json) const {
+bool EffectManager::isRelicEffectLoaded(const std::string& id) const{
+    return RelicEffectLoader::Get().isEffectLoaded(id);
+}
+bool EffectManager::isInstantEffectLoaded(const std::string& id)const{
+    return InstantEffectLoader::Get().isEffectLoaded(id);
+}
+void EffectManager::loadEffects(const json& json) {
     try {
         if (json.contains("InstantEffects")) {
-            InstantEffectLoader::Get().loadInstantEffect(json["InstantEffects"]);
+            instantIDs=InstantEffectLoader::Get().loadInstantEffect(json["InstantEffects"]);
         } else {
             TraceLog(LOG_WARNING, "No InstantEffects found in JSON");
         }
 
         if (json.contains("RelicEffects")) {
-            RelicEffectLoader::Get().loadRelicEffect(json["RelicEffects"]);
+            relicIDs=RelicEffectLoader::Get().loadRelicEffect(json["RelicEffects"]);
         } else {
             TraceLog(LOG_WARNING, "No RelicEffects found in JSON");
         }
@@ -1614,12 +1659,19 @@ std::shared_ptr<InstantEffect> EffectManager::getInstantEffect(const std::string
     TraceLog(LOG_INFO, "Getting InstantEffect [id: %s]",id.c_str());
     return InstantEffectLoader::Get().getEffect(id);
 }
-
+std::shared_ptr<InstantEffect> EffectManager::getInstantEffect(const int index)const{
+    return getInstantEffect(instantIDs.at(index));
+}
 std::shared_ptr<RelicEffect> EffectManager::getRelicEffect(const std::string& id) const {
     TraceLog(LOG_INFO, "Getting RelicEffect [id: %s]",id.c_str());
     return RelicEffectLoader::Get().getEffect(id);
 }
-void InstantEffectLoader::loadInstantEffect(const json& effects) {
+std::shared_ptr<RelicEffect> EffectManager::getRelicEffect(const int index)const{
+    return getRelicEffect(relicIDs.at(index));
+}
+std::map<int,std::string> InstantEffectLoader::loadInstantEffect(const json& effects) {
+    std::map<int,std::string> EffectIDs={{0," "}};
+    int index=1;
     for (const auto& effect : effects) {
         try {
             std::string id = effect["id"].get<std::string>();
@@ -1628,6 +1680,8 @@ void InstantEffectLoader::loadInstantEffect(const json& effects) {
             factory->loadFromJson(effect["params"]);
             factories[id] = std::move(factory);
             TraceLog(LOG_INFO, "Loaded InstantEffect: %s", id.c_str());
+            EffectIDs[index]=id;
+            index++;
         } catch (const std::exception& e) {
             TraceLog(LOG_ERROR, "Failed to load InstantEffect: %s", e.what());
         }
@@ -1637,18 +1691,38 @@ void InstantEffectLoader::loadInstantEffect(const json& effects) {
         GenInstantEffectFactory(f," ");
         factories[" "]=std::move(f);
     }
+    return EffectIDs;
 }
 void GenInstantEffectFactory(std::unique_ptr<InstantEffectFactory>& f,std::string id){
     if(id=="speed_boost"){
         f=std::make_unique<ConcreteInstantEffectFactory<SpeedBoost>>();
     }else if(id=="health_boost"){
         f=std::make_unique<ConcreteInstantEffectFactory<HealthBoost>>();
-    }else{
+    }else if(id=="new_relic"){
+        f=std::make_unique<ConcreteInstantEffectFactory<NewRelic>>();
+    }
+    else{
         f=std::make_unique<ConcreteInstantEffectFactory<NullInstantEffect>>();
     }
 }
-void RelicEffectLoader::loadRelicEffect(const json& relics) {
+
+std::shared_ptr<InstantEffect> InstantEffectLoader::getEffect(const std::string& id) {
+    if(factories.find(id)==factories.end()){
+        TraceLog(LOG_ERROR,"Instant effect of %s not exist",id.c_str());
+        return factories[" "]->create(); 
+    }
+    return factories[id]->create();
+}
+
+bool InstantEffectLoader::isEffectLoaded(const std::string& id)const{
+    if(factories.find(id)!=factories.end()){return true;}
+    return false;
+}
+
+std::map<int,std::string> RelicEffectLoader::loadRelicEffect(const json& relics) {
+    std::map<int,std::string> EffectIDs={{0," "}};
     std::string id, type;
+    int index=1;
     for (const auto& relic : relics) {
         try {
             id = relic["id"].get<std::string>();
@@ -1657,6 +1731,8 @@ void RelicEffectLoader::loadRelicEffect(const json& relics) {
             factory->loadFromJson(relic["params"]);
             factories[id] = std::move(factory);
             TraceLog(LOG_INFO, "Loaded RelicEffect: %s", id.c_str());
+            EffectIDs[index]=id;
+            index++;
         } catch (const std::exception& e) {
             TraceLog(LOG_ERROR, "Failed to load RelicEffect: %s", e.what());
         }
@@ -1666,21 +1742,22 @@ void RelicEffectLoader::loadRelicEffect(const json& relics) {
         GenRelicEffectFactory(f," ");
         factories[" "]=std::move(f);
     }
+    return EffectIDs;
 }
 void GenRelicEffectFactory(std::unique_ptr<RelicEffectFactory>& f,std::string id){
     if(id=="double_shoot_relic"){
        f=std::make_unique<ConcreteRelicFactory<DoubleShootRelic>>(); 
-    }else{
+    }
+    else{
        f=std::make_unique<ConcreteRelicFactory<NullRelicEffect>>(); 
     }
 }
-std::shared_ptr<InstantEffect> InstantEffectLoader::getEffect(const std::string& id) {
-    if(factories.find(id)==factories.end()){
-        TraceLog(LOG_ERROR,"Instant effect of %s not exist",id.c_str());
-        return factories[" "]->create(); 
-    }
-    return factories[id]->create();
+
+bool RelicEffectLoader::isEffectLoaded(const std::string& id) const{
+    if(factories.find(id)!=factories.end()){return true;}
+    return false;
 }
+
 
 std::shared_ptr<RelicEffect> RelicEffectLoader::getEffect(const std::string& id) {
     if(factories.find(id)==factories.end()){
@@ -1688,6 +1765,63 @@ std::shared_ptr<RelicEffect> RelicEffectLoader::getEffect(const std::string& id)
         return factories[" "]->create();
     }
     return factories[id]->create();
+}
+以下是InstantEffect.cpp中的内容：
+#include "Effect/InstantEffect.h"
+#include "Effect/EffectManager.h"
+#include "Entity.h"
+#include <string>
+
+SpeedBoost::SpeedBoost(const nlohmann::json& params):InstantEffect(){
+	rate=params["rate"].get<float>();
+}
+void SpeedBoost::onApply(Player& player)const{
+	player.setAttackInterval(rate);
+}
+
+HealthBoost::HealthBoost(const nlohmann::json& params):InstantEffect(){
+	if(params["value"].is_number_float()){
+		value=params["value"].get<float>();
+	}else{
+		value=params["value"].get<int>();
+	}
+}
+void HealthBoost::onApply(Player& player)const{
+	const int* intPtr=std::get_if<int>(&value);
+	if(intPtr!=nullptr){
+		player.MaxHealthBoost(*intPtr);
+	}else{
+		player.MaxHealthBoost(*(std::get_if<float>(&value)));
+	}
+}
+
+NewRelic::NewRelic(const nlohmann::json& params):InstantEffect(){
+	relic_id="null_relic_effect";
+}
+void NewRelic::onApply(Player& player)const{
+	if(relic_id=="null_relic_effect"){
+		TraceLog(LOG_ERROR,"creating a new relic with default id!");
+		return;
+	}else{
+		if(EffectManager::Get().isRelicEffectLoaded(relic_id)){
+			player.addRelic(EffectManager::Get().getRelicEffect(relic_id));
+		}else{
+			TraceLog(LOG_ERROR, "creating a new relic with unknown id: %s",relic_id.c_str());
+		}
+	}
+}
+void NewRelic::setRelicID(const std::string& id){
+	relic_id=id;
+}
+以下是RelicEffect.cpp中的内容：
+#include "Effect/RelicEffect.h"
+#include "Entity.h"
+
+DoubleShootRelic::DoubleShootRelic(const nlohmann::json& params):RelicEffect(){
+	description=params["description"].get<std::string>();
+}
+void DoubleShootRelic::onTrigger(Entity& relatedEntity){
+	TraceLog(LOG_WARNING,"Triggering DoubleShootRelic(Not developed yet)");
 }
 以下是CMakeLists.txt中的内容：
 #UI中的CMakeLists.txt
@@ -1874,29 +2008,32 @@ VictoryUI::VictoryUI(){
 	}			
 }
 void VictoryUI::tryGenerateRewards(Player& player){
-	TraceLog(LOG_INFO,"Generating rewards");
-	player.deductMoney(DataManager::Get().getRefreshMoney());
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::uniform_int_distribution<> dis(0,DataManager::Get().getRewardSize()-1);
-	currentRewards.clear();
-	for(int i=0;i<3;i++){
-		currentRewards.push_back(DataManager::Get().getReward(dis(gen)));
-		rewardBtn[i].setText(currentRewards[i].name);
-		rewardBtn[i].setExplain(currentRewards[i].description);
+	bool success=player.deductMoney(DataManager::Get().getRefreshMoney());
+	if(success){
+		TraceLog(LOG_INFO,"Generating rewards");
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_int_distribution<> dis(0,DataManager::Get().getRewardSize()-1);
+		currentRewards.clear();
+		for(int i=0;i<3;i++){
+			currentRewards.push_back(DataManager::Get().getReward(dis(gen)));
+			rewardBtn[i].setText(currentRewards[i].getName());
+			rewardBtn[i].setExplain(currentRewards[i].getDescription());
+		}
+		DataManager::Get().refreshTimesAdvance();
+		if(player.getMoney()<=DataManager::Get().getRefreshMoney()){
+			refreshBtn.setAvailibility(false);
+		}else{
+			refreshBtn.setAvailibility(true);
+		}
+		refreshBtn.setAddition("(-"+std::to_string(DataManager::Get().getRefreshMoney())+")");
 	}
-	DataManager::Get().refreshTimesAdvance();
-	if(player.getMoney()<=DataManager::Get().getRefreshMoney()){
-		refreshBtn.setAvailibility(false);
-	}else{
-		refreshBtn.setAvailibility(true);
-	}
-	refreshBtn.setAddition("(-"+std::to_string(DataManager::Get().getRefreshMoney())+")");
 }
 void VictoryUI::chooseReward(const int i,Player& player){
 	TraceLog(LOG_INFO,"Choosing reward[%d]",i);
 	DataManager::Get().resetRefreshTimes();
 	Reward reward=currentRewards[i];
+	reward.apply(player);
 }
 
 void VictoryUI::Draw() const{

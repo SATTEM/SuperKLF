@@ -10,5 +10,11 @@
     "description": "max health boost 50",
     "icon_path": "./res/image/health_boost.png",
     "effectID": "health_boost"
+  },
+  {
+    "name":"NewRelic",
+    "description":"get a new relic: ",
+    "icon_path":"",
+    "effectID":"new_relic"
   }
 ]

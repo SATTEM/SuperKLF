@@ -76,6 +76,7 @@ bool triggerHPThreshold(const int hp,const int maxHP){
 void Player::Update(const float deltaTime){
 	tryFire(*this, deltaTime);
 	updateBulletPool(bulletPool, deltaTime,*this);
+	Draw();
 }
 void Player::Draw() const {
 	DrawTextureV(texture,position,WHITE);
@@ -92,6 +93,7 @@ void Player::drawHPandEnergy() const{
 void Enemy::Update(const float deltaTime){
 	tryFire(*this, deltaTime);
 	updateBulletPool(bulletPool, deltaTime,*this);
+	Draw();
 }
 void tryFire(Entity& shooter,const float deltaTime){
 	float& attackTimer=shooter.getAttackTimer();
@@ -103,7 +105,6 @@ void tryFire(Entity& shooter,const float deltaTime){
 	if(attackTimer>=attackInterval){
 		shooter.fire();
 		attackTimer=0;
-		shooter.addEnergy(shooter.getEnergyRise());
 	}
 	EventSystem::Get().broadcastEvent(Occasion::OnShoot,shooter);
 }

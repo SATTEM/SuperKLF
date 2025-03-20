@@ -33,17 +33,11 @@ public:
 
 	~Entity()=default;
 	virtual void Update(const float deltaTime)=0;
-	virtual void Draw() const =0;
-	virtual void drawHPandEnergy() const=0;
 	void fire(Vector2 pos={0,0});
 	void fireBlast();
 	void takeDamage(const int damage);
 	bool isAlive() const {return currentHP>0;}
 	bool canCastSkill() const{return energy>=maxEnergy;}
-	void addEnergy(const int value){
-		energy=std::clamp(energy+value,0,maxEnergy);
-	}
-	void resetEnergy(){energy=0;}
 	void reset();
 	void addBullet(Bullet aBullet){bulletPattern.push_back(std::move(aBullet));}
 	void removeBullet(const int index){bulletPattern.erase(bulletPattern.begin()+index);}
@@ -52,13 +46,16 @@ public:
 	void addRelic(std::shared_ptr<RelicEffect> relic);
 	float& getAttackTimer(){return attackTimer;}
 	float& getAttackInterVale(){return attackInterval;}
-	int& getEnergyRise(){return energyRise;}
 	Entity& getOpponent(){return *opponent;}
 	const int getEnergy() const{return energy;}
 	const int getHP() const{return currentHP;}
 	const int getMaxEnergy() const{return maxEnergy;}
 	const Rectangle& getCollider() const{return boxCollider;}
-
+private:
+	void addEnergy(const int value){energy=std::clamp(energy+value,0,maxEnergy);}
+	virtual void Draw() const =0;
+	virtual void drawHPandEnergy() const=0;
+	void resetEnergy(){energy=0;}
 };
 
 class Player:public Entity{
@@ -69,8 +66,6 @@ public:
 	,const float interval=1,const int MAXenergy=100,const int rise=10)
 	:Entity(texPath,pos,hp,interval,MAXenergy,rise){}
 	void Update(const float deltaTime) override;
-	void Draw() const override;
-	void drawHPandEnergy() const override;
 	void setAttackInterval(const float rate){attackInterval*=rate;}
 	void MaxHealthBoost(const int val){maxHP+=val;}
 	void MaxHealthBoost(const float rate){maxHP*=rate;}
@@ -80,6 +75,9 @@ public:
 		else{money-=value;return true;}
 	}
 	const int getMoney() const{return money;}
+private:
+	void Draw() const override;
+	void drawHPandEnergy() const override;
 };
 
 class Enemy:public Entity{
@@ -88,6 +86,7 @@ public:
 	,const float interval=1,const int MAXenergy=100,const int rise=10)
 	:Entity(texPath,pos,hp,interval,MAXenergy,rise){}
 	void Update(const float deltaTime) override;
+private:
 	void Draw() const override;
 	void drawHPandEnergy() const override;
 };
