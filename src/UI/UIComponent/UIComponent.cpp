@@ -1,6 +1,8 @@
 #include "UIComponent.h"
 #include "ResourceManager.h"
 #include "Collision.h"
+#include "UI.h"
+#include "GameStage.h"
 extern "C"{
     #include "raylib.h"
 }
@@ -14,6 +16,18 @@ const float UI::countTextPosX(const std::string& str,const int origin,const int 
 	return posX;
 }	
 
+void BulletDisplay::Draw() const{
+	Vector2 nowPos={box.x+UI::BULLET_DISPLAY_OFFSET,box.y+UI::BULLET_DISPLAY_OFFSET};
+	DrawRectangle(box.x,box.y,box.width,box.height,Fade(GOLD,0.4));
+	for(auto& bullet:StageController::Get().getPlayerBulletPattern()){
+		bullet.DrawAsPattern(nowPos,bulletScale);
+		nowPos={nowPos.x+BULLET::BULLET_SIZE.x,nowPos.y};
+		if(nowPos.x>box.width){
+			nowPos.x=box.x+UI::BULLET_DISPLAY_OFFSET;
+			nowPos.y+=BULLET::BULLET_SIZE.y;
+		}
+	}
+}
 
 Button::Button(Rectangle r, std::string t, Color c) {
     rect = r;

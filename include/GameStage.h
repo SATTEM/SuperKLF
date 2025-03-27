@@ -30,7 +30,7 @@ public:
 	}
 	void resetGame();
 	void bindEntities(std::unique_ptr<Player>&& p,std::unique_ptr<Enemy>&& e){player.reset(p.release());enemy.reset(e.release());}
-	Player& getPlayer(){return *player;}
+	const std::vector<Bullet>& getPlayerBulletPattern() const{return player->getBulletPattern();}
 	Enemy& getEnemy(){return *enemy;}
 	void update();
 	const GameStage getCurrentStage() const {return currentStage;}

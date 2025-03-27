@@ -96,3 +96,12 @@ void VictoryUI::Draw() const{
 	}
 	refreshBtn.Draw();
 }
+
+BattleUI::BattleUI():bulletPattern{Rectangle{0,GetScreenHeight()*0.34f,float(UI::BULLET_DISPLAY_WIDTH),float(UI::BULLET_DISPLAY_HEIGHT)}}
+{
+	bulletPattern.setBulletScale(UI::BULLET_DISPLAY_SCALE);
+}
+
+void BattleUI::Draw() const{
+	bulletPattern.Draw();
+}

@@ -6,6 +6,13 @@
 #include "UIComponent.h"
 namespace UI {
 	const int MAX_ENGLISH_EXPLAIN_LINE=24;
+	const int MIN_FONT_SIZE=1;	
+	const int FONTSIZE=40;
+	const int EXPLAIN_FONTSIZE=15;
+	const int BULLET_DISPLAY_OFFSET=2;	
+	const int BULLET_DISPLAY_HEIGHT=240;
+	const int BULLET_DISPLAY_WIDTH=120;
+	const float BULLET_DISPLAY_SCALE=0.15;
 }
 class DefeatUI{
 private:
@@ -42,6 +49,21 @@ public:
 	void chooseReward(const int i,Player& player);
 	const Button& getRewardBtn(int i) const{return rewardBtn[i];}
 	const ButtonWithNumber& getRefreshBtn() const{return refreshBtn;}
+};
+
+class BattleUI{
+private:
+	BulletDisplay bulletPattern;
+	BattleUI();
+	~BattleUI()=default;
+public:
+	BattleUI(const BattleUI&)=delete;
+	void operator=(const BattleUI&)=delete;
+	static BattleUI& Get(){
+		static BattleUI instance;
+		return instance;
+	}
+	void Draw() const;
 };
 
 #endif

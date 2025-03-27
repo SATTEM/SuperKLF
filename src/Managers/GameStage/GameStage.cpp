@@ -60,14 +60,15 @@ void StageController::beginBattle(){
 	enemy->reset();
 }
 void StageController::battleUpdate(){
-	static bool newBattle=false;
-	if(newBattle){
+	static bool continuedBattle=false;
+	if(!continuedBattle){
 		beginBattle();
-		newBattle=false;
+		continuedBattle=true;
 	}
 	float deltaTime=GetFrameTime();
 	player->Update(deltaTime);
 	enemy->Update(deltaTime);
+	BattleUI::Get().Draw();	
 	currentStage=checkBattleStage(*player, *enemy);
 	if(currentStage==GameStage::Defeat){
 		TraceLog(LOG_INFO, "[GameSystem] Battle Defeated");
@@ -75,7 +76,7 @@ void StageController::battleUpdate(){
 		TraceLog(LOG_INFO, "[GameSystem] Battle Victory");
 	}
 	if(currentStage!=GameStage::Battle&&currentStage!=GameStage::Pause){
-		newBattle=true;
+		continuedBattle=false;
 	}
 }
 const GameStage checkBattleStage(const Player& player,const Enemy& enemy){

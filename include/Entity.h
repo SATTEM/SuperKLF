@@ -50,6 +50,7 @@ public:
 	const int getEnergy() const{return energy;}
 	const int getHP() const{return currentHP;}
 	const int getMaxEnergy() const{return maxEnergy;}
+	const std::vector<Bullet>& getBulletPattern() const{return bulletPattern;}
 	const Rectangle& getCollider() const{return boxCollider;}
 private:
 	void addEnergy(const int value){energy=std::clamp(energy+value,0,maxEnergy);}

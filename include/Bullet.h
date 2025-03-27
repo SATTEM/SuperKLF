@@ -52,6 +52,7 @@ public:
 	const Vector2 getColliderCentre() const {return {position.x+int(texture.width*drawScale/2),position.y+int(texture.height*drawScale/2)};}
 	const float getColliderRadius() const {return colliderRadius;}
 	const bool shouldBeRemoved() const{return shouldRemove;}
+	void DrawAsPattern(const Vector2& pos,float scale=0.f) const;
 private:
 	void Draw() const;
 	void checkHit(Entity& shooter);

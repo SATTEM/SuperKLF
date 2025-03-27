@@ -9,12 +9,19 @@ namespace UI{
 	const int BASIC_BUTTON_HEIGHT = 50;
 	const float WIDTH_RADIO=0.9f;
 	const float HEIGHT_RADIO=0.5f;
-	const int MIN_FONT_SIZE=1;	
-	const int FONTSIZE=40;
-	const int EXPLAIN_FONTSIZE=15;
 	const float countTextPosX(const std::string& str,const int origin,const int fontSize,const int offset=0);
-	
 }
+
+class BulletDisplay{
+private:
+	Rectangle box;
+	float bulletScale=0.f;
+public:
+	BulletDisplay(const Rectangle& b):box(b){}
+	~BulletDisplay()=default;
+	void setBulletScale(const float scale){bulletScale=scale;}
+	void Draw()const;
+};
 
 class Button{
 protected:

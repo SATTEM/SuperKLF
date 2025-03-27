@@ -55,7 +55,7 @@ void Bullet::Update(const float deltaTime,Entity& shooter){
 	}
 }
 void Bullet::checkHit(Entity& shooter) {
-	if(Collision::checkBulletEntity(*this, shooter.getOpponent())){
+	if(active&&Collision::checkBulletEntity(*this, shooter.getOpponent())){
 		tryTriggerEffects(shooter, Occasion::OnHit);
 		shouldRemove=true;
 	}else{
@@ -73,6 +73,14 @@ void Bullet::Draw() const {
 	if(IsTextureValid(texture)){
 		DrawTextureEx(texture,position,0,drawScale,WHITE); 
 		DrawCircleLinesV(getColliderCentre(),colliderRadius,BLUE);
+	}
+}
+void Bullet::DrawAsPattern(const Vector2& pos,float scale) const{
+	if(IsTextureValid(texture)){
+		if(scale==0.f){
+			scale=drawScale;
+		}
+		DrawTextureEx(texture,pos,0,scale,WHITE);
 	}
 }
 const bool isOutOfScreen(const Vector2& pos){
