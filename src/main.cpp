@@ -37,7 +37,7 @@ int main(void){
 	std::unique_ptr<Enemy> enemy;
 	entityInit(std::move(player), std::move(enemy));
 	SetTargetFPS(180);
-	gameCTRL.transitionTo(GameStage::Battle);
+	gameCTRL.transitionTo(GameStage::MainMenu);
 	while(!shouldEnd()){
 		BeginDrawing();
 		ClearBackground(WHITE);

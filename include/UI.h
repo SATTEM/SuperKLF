@@ -14,6 +14,25 @@ namespace UI {
 	const int BULLET_DISPLAY_WIDTH=120;
 	const float BULLET_DISPLAY_SCALE=0.15;
 }
+
+class MainMenuUI{
+private:
+	Button startButton,exitButton,continueButton;
+	MainMenuUI();
+	~MainMenuUI()=default;
+public:
+	MainMenuUI(const MainMenuUI&)=delete;
+	void operator=(const MainMenuUI&)=delete;
+	static MainMenuUI& Get(){
+		static MainMenuUI instance;
+		return instance;
+	}
+	void Draw()const;
+	const bool isExit()const;
+	const bool isStart()const;
+	
+};
+
 class DefeatUI{
 private:
 	Button restartButton,exitButton;
@@ -26,8 +45,8 @@ public:
 		static DefeatUI instance;
 		return instance;
 	}
-	const Button& getRestartBtn() const{return restartButton;}
-	const Button& getExitBtn() const{return exitButton;}
+	const bool isRestart() const;
+	const bool isExit() const;
 	void Draw() const;
 };
 class VictoryUI{
@@ -47,8 +66,8 @@ public:
 	void Draw() const;
 	void tryGenerateRewards(Player& player);
 	void chooseReward(const int i,Player& player);
-	const Button& getRewardBtn(int i) const{return rewardBtn[i];}
-	const ButtonWithNumber& getRefreshBtn() const{return refreshBtn;}
+	const bool isRewardButtonPressed(int i) const;
+	const bool isRefreshButtonPressed() const;
 };
 
 class BattleUI{

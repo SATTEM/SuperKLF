@@ -6,9 +6,6 @@
 extern "C"{
     #include "raylib.h"
 }
-const bool isButtonPressed(const Button& btn);
-const bool isButtonHovered(const Button& btn);
-
 const float UI::countTextPosX(const std::string& str,const int origin,const int fontSize,const int offset){
 	float posX=origin;
 	const Font& font=ResourceManager::Get().loadFont();
@@ -18,7 +15,8 @@ const float UI::countTextPosX(const std::string& str,const int origin,const int 
 
 void BulletDisplay::Draw() const{
 	Vector2 nowPos={box.x+UI::BULLET_DISPLAY_OFFSET,box.y+UI::BULLET_DISPLAY_OFFSET};
-	DrawRectangle(box.x,box.y,box.width,box.height,Fade(GOLD,0.4));
+	DrawRectangle(box.x,box.y,box.width,box.height,Fade(GRAY,0.4));
+	DrawRectangleLines(box.x, box.y, box.width, box.height, YELLOW);
 	for(auto& bullet:StageController::Get().getPlayerBulletPattern()){
 		bullet.DrawAsPattern(nowPos,bulletScale);
 		nowPos={nowPos.x+BULLET::BULLET_SIZE.x,nowPos.y};
@@ -30,11 +28,20 @@ void BulletDisplay::Draw() const{
 }
 
 Button::Button(Rectangle r, std::string t, Color c) {
-    rect = r;
+    rect = {r.x-r.width/2.f,r.y-r.height/2.f,r.width,r.height};
+	if(rect.x<0){rect.x=0;}
+	if(rect.y<0){rect.y=0;}
     text = t;
     color = c;
 	resetPosAndSize();
 }
+const bool Button::isHoovered()const{
+	return Collision::checkIsTouchButton(*this);
+}
+const bool Button::isPressed()const{
+	return  isHoovered()&&IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+}
+
 void Button::resetPosAndSize(){
     const float maxTextWidth = rect.width * UI::WIDTH_RADIO;
     const float maxTextHeight = rect.height * UI::HEIGHT_RADIO;
@@ -64,9 +71,9 @@ void Button::Draw() const{
 	Color drawColor =color;
 	const Font& font=ResourceManager::Get().loadFont();
 	if(available){
-		if(isButtonPressed(*this)){
+		if(isPressed()){
 			drawColor=ColorBrightness(color, -0.3f);
-		}else if(isButtonHovered(*this)){
+		}else if(isHoovered()){
 			drawColor=ColorBrightness(color, -0.15f);
 		}
 	}else{
@@ -79,7 +86,7 @@ void Button::Draw() const{
 }
 void ButtonWithExplain::Draw() const{
 	Button::Draw();
-	if(isButtonHovered(*this)&&available){
+	if(isHoovered()&&available){
         DrawExplain();
 	}  
 }
@@ -96,9 +103,9 @@ void ButtonWithNumber::Draw() const{
 	Color drawColor =color;
 	const Font& font=ResourceManager::Get().loadFont();
 	if(available){
-		if(isButtonPressed(*this)){
+		if(isPressed()){
 			drawColor=ColorBrightness(color, -0.3f);
-		}else if(isButtonHovered(*this)){
+		}else if(isHoovered()){
 			drawColor=ColorBrightness(color, -0.15f);
 		}
 	}else{
@@ -108,11 +115,4 @@ void ButtonWithNumber::Draw() const{
 	BeginScissorMode(rect.x, rect.y, rect.width, rect.height);
 	DrawTextEx(font, (text+addition).c_str(), textPos, fontSize, 1, WHITE);
 	EndScissorMode();
-}
-
-const bool isButtonPressed(const Button& btn){
-	return isButtonHovered(btn)&&IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
-}
-const bool isButtonHovered(const Button& btn){
-	return Collision::checkIsTouchButton(btn);
 }

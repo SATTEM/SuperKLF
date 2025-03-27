@@ -1,32 +1,19 @@
 目前：
-完成战斗胜利后的强化环节
-{
-完成ButtonWithExplain(完成)
-完成从配置文件中读取数据的功能（完成）
-根据读取到的奖励完成tryGenerateRewards()，使其能够完全随机地刷出奖励，并相应地改变奖励按钮的名字和解释（完成）
-重构特效系统:
-->实现即时特效工厂
-->实现InstantEffectLoader
--->loadInstantEffect()
--->getEffect()
-->同理完成RelicEffectLoader
-->添加InvalidEffect
-->实现EffectManager
-->实现EventSystem
--->实现bindRelicAndEvent()
--->实现broadcastEvent()
--->添加广播节点
--->完成chooseReward()
-->实现Reward::apply()
-------------------------->构建货币系统
+搭建主菜单{
+->开始游戏时就要给玩家一个强化机制
 }
-战斗中显示子弹序列{
-->添加BattleUI，优化战斗逻辑
-}
-搭建主菜单、暂停菜单
+暂停菜单
 构建关卡系统
+{一个关卡等于一个boss}
+构建货币系统
 完成存档功能
 想法：
-换个字体，并且让raylib能显示中文
-写个工程文档（可以让ai代劳)
+换个字体，并且让raylib能显示中文{
+	用ResourceManager加载字体（在raylib图形组件初始化之后）
+}
+调整UI{
+	Button背景支持图片，
+	背景绘制优化，
+}
+写个工程文档(可以让ai代劳)
 

@@ -9,7 +9,6 @@
 class StageController{
 private:
 	GameStage currentStage;
-	EventSignal signal;
 	std::unique_ptr<Player> player;
 	std::unique_ptr<Enemy> enemy;
 	StageController();

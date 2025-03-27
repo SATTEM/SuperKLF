@@ -40,6 +40,8 @@ public:
 	std::string getText()const{return text;}
 	Button()=default;
 	Button(Rectangle r,std::string t,Color c);
+	const bool isHoovered()const;
+	const bool isPressed()const;
 };
 class ButtonWithNumber:public Button{
 private:

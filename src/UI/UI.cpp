@@ -9,6 +9,56 @@ extern "C"{
 	#include "raylib.h"
 }
 
+MainMenuUI::MainMenuUI(){
+	const int screenHeight=GetScreenHeight();
+	const int screenWidth=GetScreenWidth();
+	startButton={
+		{
+			screenWidth/2.f,
+			screenHeight*0.5f,
+			UI::BASIC_BUTTON_WIDTH,
+			UI::BASIC_BUTTON_HEIGHT
+		},
+		"Start",
+		ORANGE
+	};
+	exitButton={
+		{
+			screenWidth/2.f,
+			screenHeight*0.7f,
+			UI::BASIC_BUTTON_WIDTH,
+			UI::BASIC_BUTTON_HEIGHT
+		},
+		"Exit",
+		ORANGE
+	};
+	continueButton={
+		{
+			screenWidth/2.f,
+			screenHeight*0.6f,
+			UI::BASIC_BUTTON_WIDTH,
+			UI::BASIC_BUTTON_HEIGHT
+		},
+		"Continue(Not supported)",
+		ORANGE
+	};
+	continueButton.setAvailibility(false);
+}
+void MainMenuUI::Draw()const{
+	ClearBackground(WHITE);
+	std::string title="SPKLF";
+	DrawText(title.c_str(), UI::countTextPosX(title, GetScreenWidth()/2, UI::FONTSIZE*2), GetScreenHeight()*0.2f, 2*UI::FONTSIZE, RED);
+	startButton.Draw();
+	exitButton.Draw();
+	continueButton.Draw();
+}
+const bool MainMenuUI::isExit()const{
+	return exitButton.isPressed();
+}
+const bool MainMenuUI::isStart()const{
+	return startButton.isPressed();
+}
+
 void DefeatUI::Draw() const{
 	ClearBackground(WHITE);
 	const int screenHeight=GetScreenHeight();
@@ -16,8 +66,8 @@ void DefeatUI::Draw() const{
 	DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK,0.5f));
 	std::string title="Mamba Out!";
 	std::string subTitle=R"(You have passed %d levels!)";
-	DrawText(title.c_str(),UI::countTextPosX(title,screenWidth/2,2*UI::FONTSIZE),200,2*UI::FONTSIZE,RED);
-	DrawText(TextFormat(subTitle.c_str(),DataManager::Get().getPassedLevel()), UI::countTextPosX(subTitle, screenWidth/2, UI::FONTSIZE), 350, UI::FONTSIZE, RED);
+	DrawText(title.c_str(),UI::countTextPosX(title,screenWidth/2,2*UI::FONTSIZE),screenHeight*0.2f,2*UI::FONTSIZE,RED);
+	DrawText(TextFormat(subTitle.c_str(),DataManager::Get().getPassedLevel()), UI::countTextPosX(subTitle, screenWidth/2, UI::FONTSIZE), screenHeight*0.2f+150, UI::FONTSIZE, RED);
 	restartButton.Draw();
 	exitButton.Draw();
 }
@@ -26,34 +76,48 @@ DefeatUI::DefeatUI(){
 	const int screenHeight=GetScreenHeight();
 	const int screenWidth=GetScreenWidth();
 	restartButton={
-	{screenWidth/2.0f-UI::BASIC_BUTTON_WIDTH/2.0f,
+	{screenWidth/2.0f,
 		screenHeight*0.6f,
 		UI::BASIC_BUTTON_WIDTH,
 		UI::BASIC_BUTTON_HEIGHT},
 	"[Space]Restart",ORANGE};
 	exitButton={{
-		screenWidth/2.0f-UI::BASIC_BUTTON_WIDTH/2.0f,
+		screenWidth/2.0f,
 		screenHeight*0.75f,
 		UI::BASIC_BUTTON_WIDTH,
 		UI::BASIC_BUTTON_HEIGHT},
 		"Quit",ORANGE};
 }
+const bool DefeatUI::isExit()const{
+	return exitButton.isPressed();
+}
+const bool DefeatUI::isRestart()const{
+	return restartButton.isPressed();
+}
+
 VictoryUI::VictoryUI(){
 	const int screenHeight=GetScreenHeight();
 	const int screenWidth=GetScreenWidth();
-	refreshBtn={{screenWidth/2.0f-UI::BASIC_BUTTON_WIDTH/2.0f,
+	refreshBtn={{screenWidth/2.0f,
 		screenHeight*0.8f,
 		UI::BASIC_BUTTON_WIDTH,
 		UI::BASIC_BUTTON_HEIGHT},
 		"Refresh",ORANGE};
+	float gap=(screenWidth-3*(UI::BASIC_BUTTON_WIDTH))/5.f;
 	for(int i=0;i<3;i++){
 		rewardBtn[i]={
-			{GetScreenWidth()/5.0f*(i+2)-UI::BASIC_BUTTON_WIDTH,
-			GetScreenHeight()*0.5f,
+			{gap*(i+2)+UI::BASIC_BUTTON_WIDTH*i,
+			screenHeight*0.5f,
 			UI::BASIC_BUTTON_WIDTH,
 			UI::BASIC_BUTTON_HEIGHT},
 			"Reward",ORANGE,"Explain"};
 	}			
+}
+const bool VictoryUI::isRefreshButtonPressed()const{
+	return refreshBtn.isPressed();
+}
+const bool VictoryUI::isRewardButtonPressed(int i)const{
+	return rewardBtn[i].isPressed();
 }
 void VictoryUI::tryGenerateRewards(Player& player){
 	bool success=player.deductMoney(DataManager::Get().getRefreshMoney());

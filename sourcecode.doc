@@ -173,6 +173,7 @@ public:
 	const Vector2 getColliderCentre() const {return {position.x+int(texture.width*drawScale/2),position.y+int(texture.height*drawScale/2)};}
 	const float getColliderRadius() const {return colliderRadius;}
 	const bool shouldBeRemoved() const{return shouldRemove;}
+	void DrawAsPattern(const Vector2& pos,float scale=0.f) const;
 private:
 	void Draw() const;
 	void checkHit(Entity& shooter);
@@ -563,6 +564,7 @@ public:
 	const int getEnergy() const{return energy;}
 	const int getHP() const{return currentHP;}
 	const int getMaxEnergy() const{return maxEnergy;}
+	const std::vector<Bullet>& getBulletPattern() const{return bulletPattern;}
 	const Rectangle& getCollider() const{return boxCollider;}
 private:
 	void addEnergy(const int value){energy=std::clamp(energy+value,0,maxEnergy);}
@@ -666,7 +668,6 @@ public:
 #define GAMESTAGEFWD_H
 
 enum class GameStage{MainMenu,Battle,Victory,Defeat,Pause,Exit,NextLevel};
-enum class EventSignal{IDLE,EXIT,RESTART};
 #endif
 以下是GameStage.h中的内容：
 #ifndef GAMESTAGE_H
@@ -680,7 +681,6 @@ enum class EventSignal{IDLE,EXIT,RESTART};
 class StageController{
 private:
 	GameStage currentStage;
-	EventSignal signal;
 	std::unique_ptr<Player> player;
 	std::unique_ptr<Enemy> enemy;
 	StageController();
@@ -701,7 +701,7 @@ public:
 	}
 	void resetGame();
 	void bindEntities(std::unique_ptr<Player>&& p,std::unique_ptr<Enemy>&& e){player.reset(p.release());enemy.reset(e.release());}
-	Player& getPlayer(){return *player;}
+	const std::vector<Bullet>& getPlayerBulletPattern() const{return player->getBulletPattern();}
 	Enemy& getEnemy(){return *enemy;}
 	void update();
 	const GameStage getCurrentStage() const {return currentStage;}
@@ -782,12 +782,19 @@ namespace UI{
 	const int BASIC_BUTTON_HEIGHT = 50;
 	const float WIDTH_RADIO=0.9f;
 	const float HEIGHT_RADIO=0.5f;
-	const int MIN_FONT_SIZE=1;	
-	const int FONTSIZE=40;
-	const int EXPLAIN_FONTSIZE=15;
 	const float countTextPosX(const std::string& str,const int origin,const int fontSize,const int offset=0);
-	
 }
+
+class BulletDisplay{
+private:
+	Rectangle box;
+	float bulletScale=0.f;
+public:
+	BulletDisplay(const Rectangle& b):box(b){}
+	~BulletDisplay()=default;
+	void setBulletScale(const float scale){bulletScale=scale;}
+	void Draw()const;
+};
 
 class Button{
 protected:
@@ -806,6 +813,8 @@ public:
 	std::string getText()const{return text;}
 	Button()=default;
 	Button(Rectangle r,std::string t,Color c);
+	const bool isHoovered()const;
+	const bool isPressed()const;
 };
 class ButtonWithNumber:public Button{
 private:
@@ -838,7 +847,33 @@ public:
 #include "UIComponent.h"
 namespace UI {
 	const int MAX_ENGLISH_EXPLAIN_LINE=24;
+	const int MIN_FONT_SIZE=1;	
+	const int FONTSIZE=40;
+	const int EXPLAIN_FONTSIZE=15;
+	const int BULLET_DISPLAY_OFFSET=2;	
+	const int BULLET_DISPLAY_HEIGHT=240;
+	const int BULLET_DISPLAY_WIDTH=120;
+	const float BULLET_DISPLAY_SCALE=0.15;
 }
+
+class MainMenuUI{
+private:
+	Button startButton,exitButton,continueButton;
+	MainMenuUI();
+	~MainMenuUI()=default;
+public:
+	MainMenuUI(const MainMenuUI&)=delete;
+	void operator=(const MainMenuUI&)=delete;
+	static MainMenuUI& Get(){
+		static MainMenuUI instance;
+		return instance;
+	}
+	void Draw()const;
+	const bool isExit()const;
+	const bool isStart()const;
+	
+};
+
 class DefeatUI{
 private:
 	Button restartButton,exitButton;
@@ -851,8 +886,8 @@ public:
 		static DefeatUI instance;
 		return instance;
 	}
-	const Button& getRestartBtn() const{return restartButton;}
-	const Button& getExitBtn() const{return exitButton;}
+	const bool isRestart() const;
+	const bool isExit() const;
 	void Draw() const;
 };
 class VictoryUI{
@@ -872,8 +907,23 @@ public:
 	void Draw() const;
 	void tryGenerateRewards(Player& player);
 	void chooseReward(const int i,Player& player);
-	const Button& getRewardBtn(int i) const{return rewardBtn[i];}
-	const ButtonWithNumber& getRefreshBtn() const{return refreshBtn;}
+	const bool isRewardButtonPressed(int i) const;
+	const bool isRefreshButtonPressed() const;
+};
+
+class BattleUI{
+private:
+	BulletDisplay bulletPattern;
+	BattleUI();
+	~BattleUI()=default;
+public:
+	BattleUI(const BattleUI&)=delete;
+	void operator=(const BattleUI&)=delete;
+	static BattleUI& Get(){
+		static BattleUI instance;
+		return instance;
+	}
+	void Draw() const;
 };
 
 #endif
@@ -994,7 +1044,7 @@ void Bullet::Update(const float deltaTime,Entity& shooter){
 	}
 }
 void Bullet::checkHit(Entity& shooter) {
-	if(Collision::checkBulletEntity(*this, shooter.getOpponent())){
+	if(active&&Collision::checkBulletEntity(*this, shooter.getOpponent())){
 		tryTriggerEffects(shooter, Occasion::OnHit);
 		shouldRemove=true;
 	}else{
@@ -1012,6 +1062,14 @@ void Bullet::Draw() const {
 	if(IsTextureValid(texture)){
 		DrawTextureEx(texture,position,0,drawScale,WHITE); 
 		DrawCircleLinesV(getColliderCentre(),colliderRadius,BLUE);
+	}
+}
+void Bullet::DrawAsPattern(const Vector2& pos,float scale) const{
+	if(IsTextureValid(texture)){
+		if(scale==0.f){
+			scale=drawScale;
+		}
+		DrawTextureEx(texture,pos,0,scale,WHITE);
 	}
 }
 const bool isOutOfScreen(const Vector2& pos){
@@ -1208,7 +1266,7 @@ int main(void){
 	std::unique_ptr<Enemy> enemy;
 	entityInit(std::move(player), std::move(enemy));
 	SetTargetFPS(180);
-	gameCTRL.transitionTo(GameStage::Battle);
+	gameCTRL.transitionTo(GameStage::MainMenu);
 	while(!shouldEnd()){
 		BeginDrawing();
 		ClearBackground(WHITE);
@@ -1312,18 +1370,12 @@ extern "C"{
 #include "GameStageFwd.h"
 #include "GameStage.h"
 #include "UI.h"
-#include "Collision.h"
 
-using Collision::checkIsTouchButton;
-
-
-void responseToSignalFromDefeat(const EventSignal signal);
 void drawDefeatScreen(const DefeatUI& ui);
 const GameStage checkBattleStage(const Player& player,const Enemy& enemy);
 
 StageController::StageController(){
 	currentStage=GameStage::MainMenu;
-	signal=EventSignal::IDLE;
 	player=nullptr;
 	enemy=nullptr;
 }
@@ -1364,14 +1416,15 @@ void StageController::beginBattle(){
 	enemy->reset();
 }
 void StageController::battleUpdate(){
-	static bool newBattle=false;
-	if(newBattle){
+	static bool continuedBattle=false;
+	if(!continuedBattle){
 		beginBattle();
-		newBattle=false;
+		continuedBattle=true;
 	}
 	float deltaTime=GetFrameTime();
 	player->Update(deltaTime);
 	enemy->Update(deltaTime);
+	BattleUI::Get().Draw();	
 	currentStage=checkBattleStage(*player, *enemy);
 	if(currentStage==GameStage::Defeat){
 		TraceLog(LOG_INFO, "[GameSystem] Battle Defeated");
@@ -1379,7 +1432,7 @@ void StageController::battleUpdate(){
 		TraceLog(LOG_INFO, "[GameSystem] Battle Victory");
 	}
 	if(currentStage!=GameStage::Battle&&currentStage!=GameStage::Pause){
-		newBattle=true;
+		continuedBattle=false;
 	}
 }
 const GameStage checkBattleStage(const Player& player,const Enemy& enemy){
@@ -1391,58 +1444,37 @@ void StageController::defeatUpdate(){
 	DefeatUI& ui=DefeatUI::Get();
 	ui.Draw();
 	if(IsKeyPressed(KEY_SPACE)){
-		responseToSignalFromDefeat(EventSignal::RESTART);
+		resetGame();
+		transitionTo(GameStage::Battle);
 		return;
 	}
-	if(checkIsTouchButton(ui.getRestartBtn())){
-		if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-			responseToSignalFromDefeat(EventSignal::RESTART);
-		}
+	if(ui.isRestart()){
+		transitionTo(GameStage::MainMenu);
+		return;
 	}
-	if(checkIsTouchButton(ui.getExitBtn())){
-		if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
-			responseToSignalFromDefeat(EventSignal::EXIT);
-		}
+	if(ui.isExit()){
+		transitionTo(GameStage::Exit);
+		return;
 	}
 }
-void responseToSignalFromDefeat(const EventSignal signal){
-	StageController& ctrl=StageController::Get();
-	switch(signal){
-		case(EventSignal::RESTART):
-		ctrl.resetGame();
-		ctrl.transitionTo(GameStage::Battle);
-		TraceLog(LOG_INFO, "[GameSystem] Restart game");
-		break;
-		case(EventSignal::EXIT):
-		ctrl.transitionTo(GameStage::MainMenu);
-		TraceLog(LOG_INFO, "[GameSystem] Return to main menu");
-		break;
-		case(EventSignal::IDLE):
-		break;
-	}
-}
+
 void StageController::victoryUpdate(){
 	VictoryUI& ui=VictoryUI::Get();
 	if(DataManager::Get().getRefreshTimes()==0){
 		ui.tryGenerateRewards(*player);
 	}
 	ui.Draw();
-	if(checkIsTouchButton(ui.getRefreshBtn())){
-		if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
-			ui.tryGenerateRewards(*player);
-		}
+	if(ui.isRefreshButtonPressed()){
+		ui.tryGenerateRewards(*player);
 	}
 	for(int i=0;i<3;i++){
-		if(checkIsTouchButton(ui.getRewardBtn(i))){
-			if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-				ui.chooseReward(i,*player);
-				currentStage=GameStage::NextLevel;
-			}
+		if(ui.isRewardButtonPressed(i)){
+			ui.chooseReward(i,*player);
+			currentStage=GameStage::NextLevel;
 		}
 	}
 }
 void StageController::nextLevel(){
-	TraceLog(LOG_INFO,"[GameSystem] Advancing to next Level");
 	TraceLog(LOG_WARNING,"Next level has not been developed yet");
 	transitionTo(GameStage::Battle);
 }
@@ -1450,7 +1482,16 @@ void StageController::pauseUpdate(){
 
 }
 void StageController::mainMenuUpdate(){
-	transitionTo(GameStage::Exit);
+	MainMenuUI& ui=MainMenuUI::Get();
+	ui.Draw();
+	if(ui.isExit()){
+		transitionTo(GameStage::Exit);
+		return;
+	}
+	if(ui.isStart()){
+		transitionTo(GameStage::Battle);
+		return;
+	}
 }
 以下是CMakeLists.txt中的内容：
 #ResourceManager中的CMakeLists.txt
@@ -1848,12 +1889,11 @@ target_link_directories(${PROJECT_NAME} PRIVATE ${LIBPATH})
 #include "UIComponent.h"
 #include "ResourceManager.h"
 #include "Collision.h"
+#include "UI.h"
+#include "GameStage.h"
 extern "C"{
     #include "raylib.h"
 }
-const bool isButtonPressed(const Button& btn);
-const bool isButtonHovered(const Button& btn);
-
 const float UI::countTextPosX(const std::string& str,const int origin,const int fontSize,const int offset){
 	float posX=origin;
 	const Font& font=ResourceManager::Get().loadFont();
@@ -1861,13 +1901,35 @@ const float UI::countTextPosX(const std::string& str,const int origin,const int 
 	return posX;
 }	
 
+void BulletDisplay::Draw() const{
+	Vector2 nowPos={box.x+UI::BULLET_DISPLAY_OFFSET,box.y+UI::BULLET_DISPLAY_OFFSET};
+	DrawRectangle(box.x,box.y,box.width,box.height,Fade(GRAY,0.4));
+	DrawRectangleLines(box.x, box.y, box.width, box.height, YELLOW);
+	for(auto& bullet:StageController::Get().getPlayerBulletPattern()){
+		bullet.DrawAsPattern(nowPos,bulletScale);
+		nowPos={nowPos.x+BULLET::BULLET_SIZE.x,nowPos.y};
+		if(nowPos.x>box.width){
+			nowPos.x=box.x+UI::BULLET_DISPLAY_OFFSET;
+			nowPos.y+=BULLET::BULLET_SIZE.y;
+		}
+	}
+}
 
 Button::Button(Rectangle r, std::string t, Color c) {
-    rect = r;
+    rect = {r.x-r.width/2.f,r.y-r.height/2.f,r.width,r.height};
+	if(rect.x<0){rect.x=0;}
+	if(rect.y<0){rect.y=0;}
     text = t;
     color = c;
 	resetPosAndSize();
 }
+const bool Button::isHoovered()const{
+	return Collision::checkIsTouchButton(*this);
+}
+const bool Button::isPressed()const{
+	return  isHoovered()&&IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+}
+
 void Button::resetPosAndSize(){
     const float maxTextWidth = rect.width * UI::WIDTH_RADIO;
     const float maxTextHeight = rect.height * UI::HEIGHT_RADIO;
@@ -1897,9 +1959,9 @@ void Button::Draw() const{
 	Color drawColor =color;
 	const Font& font=ResourceManager::Get().loadFont();
 	if(available){
-		if(isButtonPressed(*this)){
+		if(isPressed()){
 			drawColor=ColorBrightness(color, -0.3f);
-		}else if(isButtonHovered(*this)){
+		}else if(isHoovered()){
 			drawColor=ColorBrightness(color, -0.15f);
 		}
 	}else{
@@ -1912,7 +1974,7 @@ void Button::Draw() const{
 }
 void ButtonWithExplain::Draw() const{
 	Button::Draw();
-	if(isButtonHovered(*this)&&available){
+	if(isHoovered()&&available){
         DrawExplain();
 	}  
 }
@@ -1929,9 +1991,9 @@ void ButtonWithNumber::Draw() const{
 	Color drawColor =color;
 	const Font& font=ResourceManager::Get().loadFont();
 	if(available){
-		if(isButtonPressed(*this)){
+		if(isPressed()){
 			drawColor=ColorBrightness(color, -0.3f);
-		}else if(isButtonHovered(*this)){
+		}else if(isHoovered()){
 			drawColor=ColorBrightness(color, -0.15f);
 		}
 	}else{
@@ -1943,12 +2005,6 @@ void ButtonWithNumber::Draw() const{
 	EndScissorMode();
 }
 
-const bool isButtonPressed(const Button& btn){
-	return isButtonHovered(btn)&&IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
-}
-const bool isButtonHovered(const Button& btn){
-	return Collision::checkIsTouchButton(btn);
-}
 以下是UI.cpp中的内容：
 #include "UI.h"
 #include "DataManager.h"
@@ -1961,6 +2017,56 @@ extern "C"{
 	#include "raylib.h"
 }
 
+MainMenuUI::MainMenuUI(){
+	const int screenHeight=GetScreenHeight();
+	const int screenWidth=GetScreenWidth();
+	startButton={
+		{
+			screenWidth/2.f,
+			screenHeight*0.5f,
+			UI::BASIC_BUTTON_WIDTH,
+			UI::BASIC_BUTTON_HEIGHT
+		},
+		"Start",
+		ORANGE
+	};
+	exitButton={
+		{
+			screenWidth/2.f,
+			screenHeight*0.7f,
+			UI::BASIC_BUTTON_WIDTH,
+			UI::BASIC_BUTTON_HEIGHT
+		},
+		"Exit",
+		ORANGE
+	};
+	continueButton={
+		{
+			screenWidth/2.f,
+			screenHeight*0.6f,
+			UI::BASIC_BUTTON_WIDTH,
+			UI::BASIC_BUTTON_HEIGHT
+		},
+		"Continue(Not supported)",
+		ORANGE
+	};
+	continueButton.setAvailibility(false);
+}
+void MainMenuUI::Draw()const{
+	ClearBackground(WHITE);
+	std::string title="SPKLF";
+	DrawText(title.c_str(), UI::countTextPosX(title, GetScreenWidth()/2, UI::FONTSIZE*2), GetScreenHeight()*0.2f, 2*UI::FONTSIZE, RED);
+	startButton.Draw();
+	exitButton.Draw();
+	continueButton.Draw();
+}
+const bool MainMenuUI::isExit()const{
+	return exitButton.isPressed();
+}
+const bool MainMenuUI::isStart()const{
+	return startButton.isPressed();
+}
+
 void DefeatUI::Draw() const{
 	ClearBackground(WHITE);
 	const int screenHeight=GetScreenHeight();
@@ -1968,8 +2074,8 @@ void DefeatUI::Draw() const{
 	DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK,0.5f));
 	std::string title="Mamba Out!";
 	std::string subTitle=R"(You have passed %d levels!)";
-	DrawText(title.c_str(),UI::countTextPosX(title,screenWidth/2,2*UI::FONTSIZE),200,2*UI::FONTSIZE,RED);
-	DrawText(TextFormat(subTitle.c_str(),DataManager::Get().getPassedLevel()), UI::countTextPosX(subTitle, screenWidth/2, UI::FONTSIZE), 350, UI::FONTSIZE, RED);
+	DrawText(title.c_str(),UI::countTextPosX(title,screenWidth/2,2*UI::FONTSIZE),screenHeight*0.2f,2*UI::FONTSIZE,RED);
+	DrawText(TextFormat(subTitle.c_str(),DataManager::Get().getPassedLevel()), UI::countTextPosX(subTitle, screenWidth/2, UI::FONTSIZE), screenHeight*0.2f+150, UI::FONTSIZE, RED);
 	restartButton.Draw();
 	exitButton.Draw();
 }
@@ -1978,34 +2084,48 @@ DefeatUI::DefeatUI(){
 	const int screenHeight=GetScreenHeight();
 	const int screenWidth=GetScreenWidth();
 	restartButton={
-	{screenWidth/2.0f-UI::BASIC_BUTTON_WIDTH/2.0f,
+	{screenWidth/2.0f,
 		screenHeight*0.6f,
 		UI::BASIC_BUTTON_WIDTH,
 		UI::BASIC_BUTTON_HEIGHT},
 	"[Space]Restart",ORANGE};
 	exitButton={{
-		screenWidth/2.0f-UI::BASIC_BUTTON_WIDTH/2.0f,
+		screenWidth/2.0f,
 		screenHeight*0.75f,
 		UI::BASIC_BUTTON_WIDTH,
 		UI::BASIC_BUTTON_HEIGHT},
 		"Quit",ORANGE};
 }
+const bool DefeatUI::isExit()const{
+	return exitButton.isPressed();
+}
+const bool DefeatUI::isRestart()const{
+	return restartButton.isPressed();
+}
+
 VictoryUI::VictoryUI(){
 	const int screenHeight=GetScreenHeight();
 	const int screenWidth=GetScreenWidth();
-	refreshBtn={{screenWidth/2.0f-UI::BASIC_BUTTON_WIDTH/2.0f,
+	refreshBtn={{screenWidth/2.0f,
 		screenHeight*0.8f,
 		UI::BASIC_BUTTON_WIDTH,
 		UI::BASIC_BUTTON_HEIGHT},
 		"Refresh",ORANGE};
+	float gap=(screenWidth-3*(UI::BASIC_BUTTON_WIDTH))/5.f;
 	for(int i=0;i<3;i++){
 		rewardBtn[i]={
-			{GetScreenWidth()/5.0f*(i+2)-UI::BASIC_BUTTON_WIDTH,
-			GetScreenHeight()*0.5f,
+			{gap*(i+2)+UI::BASIC_BUTTON_WIDTH*i,
+			screenHeight*0.5f,
 			UI::BASIC_BUTTON_WIDTH,
 			UI::BASIC_BUTTON_HEIGHT},
 			"Reward",ORANGE,"Explain"};
 	}			
+}
+const bool VictoryUI::isRefreshButtonPressed()const{
+	return refreshBtn.isPressed();
+}
+const bool VictoryUI::isRewardButtonPressed(int i)const{
+	return rewardBtn[i].isPressed();
 }
 void VictoryUI::tryGenerateRewards(Player& player){
 	bool success=player.deductMoney(DataManager::Get().getRefreshMoney());
@@ -2047,4 +2167,13 @@ void VictoryUI::Draw() const{
 		rewardBtn[i].Draw();
 	}
 	refreshBtn.Draw();
+}
+
+BattleUI::BattleUI():bulletPattern{Rectangle{0,GetScreenHeight()*0.34f,float(UI::BULLET_DISPLAY_WIDTH),float(UI::BULLET_DISPLAY_HEIGHT)}}
+{
+	bulletPattern.setBulletScale(UI::BULLET_DISPLAY_SCALE);
+}
+
+void BattleUI::Draw() const{
+	bulletPattern.Draw();
 }
