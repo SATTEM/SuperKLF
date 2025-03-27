@@ -3,8 +3,7 @@
 
 #include "Bullet.h"
 #include "Entity.h"
-#include "UIComponent.h"
-
+#include "UI/Button.h"
 namespace Collision{
 	bool checkBulletEntity(const Bullet& aBullet,const Entity& aEntity);
 	bool checkEntityEntity(const Entity& a,const Entity& b);

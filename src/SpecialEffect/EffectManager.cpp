@@ -3,6 +3,7 @@
 #include "Effect/InstantEffectFactory.h"
 #include "Effect/RelicEffect.h"
 #include "Effect/RelicEffectFactory.h"
+#include <exception>
 #include <memory>
 #include <raylib.h>
 #include <string>
@@ -61,7 +62,7 @@ std::map<int,std::string> InstantEffectLoader::loadInstantEffect(const json& eff
             factory->loadFromJson(effect["params"]);
             factories[id] = std::move(factory);
             TraceLog(LOG_INFO, "Loaded InstantEffect: %s", id.c_str());
-            EffectIDs[index]=id;
+            EffectIDs.emplace(index,id);
             index++;
         } catch (const std::exception& e) {
             TraceLog(LOG_ERROR, "Failed to load InstantEffect: %s", e.what());
@@ -112,7 +113,7 @@ std::map<int,std::string> RelicEffectLoader::loadRelicEffect(const json& relics)
             factory->loadFromJson(relic["params"]);
             factories[id] = std::move(factory);
             TraceLog(LOG_INFO, "Loaded RelicEffect: %s", id.c_str());
-            EffectIDs[index]=id;
+            EffectIDs.emplace(index,id);
             index++;
         } catch (const std::exception& e) {
             TraceLog(LOG_ERROR, "Failed to load RelicEffect: %s", e.what());
@@ -145,5 +146,11 @@ std::shared_ptr<RelicEffect> RelicEffectLoader::getEffect(const std::string& id)
         TraceLog(LOG_ERROR,"Relic effect of %s not exist",id.c_str());
         return factories[" "]->create();
     }
-    return factories[id]->create();
+    try{
+        std::shared_ptr<RelicEffect> relic=factories[id]->create();
+        return relic;
+    }catch(const std::exception& e){
+        TraceLog(LOG_ERROR,e.what());
+        return factories[" "]->create();
+    }
 }

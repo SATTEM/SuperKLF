@@ -7,7 +7,7 @@ extern "C"{
 }
 #include "GameStageFwd.h"
 #include "GameStage.h"
-#include "UI.h"
+#include "UI/UI.h"
 
 void drawDefeatScreen(const DefeatUI& ui);
 const GameStage checkBattleStage(const Player& player,const Enemy& enemy);
@@ -114,6 +114,7 @@ void StageController::victoryUpdate(){
 }
 void StageController::nextLevel(){
 	TraceLog(LOG_WARNING,"Next level has not been developed yet");
+	DataManager::Get().levelAdvance();
 	transitionTo(GameStage::Battle);
 }
 void StageController::pauseUpdate(){
@@ -127,7 +128,7 @@ void StageController::mainMenuUpdate(){
 		return;
 	}
 	if(ui.isStart()){
-		transitionTo(GameStage::Battle);
+		transitionTo(GameStage::Victory);
 		return;
 	}
 }

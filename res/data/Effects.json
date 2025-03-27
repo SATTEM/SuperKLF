@@ -17,6 +17,7 @@
         {
             "id": "double_shoot_relic",
             "params": { 
+                "name":"Fast Shooter",
                 "bullet_path": "res/image/extra_bullet.png",
                 "description": "Shoot two bullets every time"
          }

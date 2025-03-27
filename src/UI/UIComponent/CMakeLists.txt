@@ -1,4 +1,4 @@
-#UI中的CMakeLists.txt
+#UIComponent中的CMakeLists.txt
 cmake_minimum_required(VERSION 3.5.0)
 #每个依赖库的名字
 project(UIComponent)

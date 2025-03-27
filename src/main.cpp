@@ -1,6 +1,7 @@
 #ifndef ASSETS_IMAGE_PATH
 #define ASSETS_IMAGE_PATH
 #include <exception>
+#include <memory>
 #endif
 
 extern "C" {
@@ -8,7 +9,6 @@ extern "C" {
 }
 #include <fstream>
 #include "Effect/EffectManager.h"
-#include "Event/EventSystem.h"
 #include "DataManager.h"
 #include "GameStageFwd.h"
 #include "ResourceManager.h"
@@ -21,21 +21,17 @@ const Vector2 playerPos={640,500};
 const Vector2 enemyPos={640,100};
 const Vector2 playerVel={0,-1};
 const Vector2 enemyVel={0,1};
-using playerPtr=std::unique_ptr<Player>;
-using enemyPtr=std::unique_ptr<Enemy>;
 
-void RegisterEffects();
-void entityInit(std::unique_ptr<Player>&&,std::unique_ptr<Enemy>&&);
-bool shouldEnd();
+void PreInit();
+void LateInit();
+void clear();
+const bool shouldEnd();
+
 int main(void){
-	RegisterEffects();
+	PreInit();
 	InitWindow(WindowWidth,WindowHeight,"SuperKLF");
 	StageController& gameCTRL=StageController::Get();
-	ResourceManager& resMgr=ResourceManager::Get();
-	EventSystem& eventSys=EventSystem::Get();
-	std::unique_ptr<Player> player;
-	std::unique_ptr<Enemy> enemy;
-	entityInit(std::move(player), std::move(enemy));
+	LateInit();
 	SetTargetFPS(180);
 	gameCTRL.transitionTo(GameStage::MainMenu);
 	while(!shouldEnd()){
@@ -45,23 +41,38 @@ int main(void){
 		gameCTRL.update();
 		EndDrawing();
 	}
-	resMgr.cleanUp();
+	clear();
 	CloseWindow();
 }
-void RegisterEffects(){
-	std::ifstream file(DATA::EFFECT_PATH);
-	nlohmann::json effects=nlohmann::json::parse(file);
-	EffectManager::Get().loadEffects(effects);
-}
-bool shouldEnd(){
+const bool shouldEnd(){
 	if(WindowShouldClose()){return true;}
 	if(StageController::Get().getCurrentStage()==GameStage::Exit){
 		return true;
 	}
 	return false;
 }
+//在raylib初始化前的初始化
+void RegisterEffects();
 
-void entityInit(std::unique_ptr<Player>&& player,std::unique_ptr<Enemy>&& enemy){
+void PreInit(){
+	RegisterEffects();
+}
+//预初始化的实现
+void RegisterEffects(){
+	std::ifstream file(DATA::EFFECT_PATH);
+	nlohmann::json effects=nlohmann::json::parse(file);
+	EffectManager::Get().loadEffects(effects);
+}
+//在raylib初始化后的初始化
+void entityInit();
+
+void LateInit(){
+	entityInit();
+}
+//后初始化的实现
+void entityInit(){
+	std::unique_ptr<Player> player;
+	std::unique_ptr<Enemy> enemy;
 	player.reset(new Player( ASSETS_IMAGE_PATH"player.png",playerPos,10,0.1,100,10));
 	enemy.reset(new Enemy { ASSETS_IMAGE_PATH"enemy.png",enemyPos});
 	player->setOpponent(*enemy);
@@ -70,5 +81,9 @@ void entityInit(std::unique_ptr<Player>&& player,std::unique_ptr<Enemy>&& enemy)
 	enemy->setOpponent(*player);
 	enemy->addBullet({ ASSETS_IMAGE_PATH"pen.png"});
 	StageController::Get().bindEntities(std::move(player),std::move(enemy));	
-	TraceLog(LOG_INFO,"Entities initialed");
+	TraceLog(LOG_INFO,"Entities initialized");
+}
+//清理函数
+void clear(){
+	ResourceManager::Get().cleanUp();
 }

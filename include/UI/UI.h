@@ -3,18 +3,8 @@
 #include "Entity.h"
 #include "RewardSystem.h"
 #include <vector>
-#include "UIComponent.h"
-namespace UI {
-	const int MAX_ENGLISH_EXPLAIN_LINE=24;
-	const int MIN_FONT_SIZE=1;	
-	const int FONTSIZE=40;
-	const int EXPLAIN_FONTSIZE=15;
-	const int BULLET_DISPLAY_OFFSET=2;	
-	const int BULLET_DISPLAY_HEIGHT=240;
-	const int BULLET_DISPLAY_WIDTH=120;
-	const float BULLET_DISPLAY_SCALE=0.15;
-}
-
+#include "Button.h"
+#include "Information.h"
 class MainMenuUI{
 private:
 	Button startButton,exitButton,continueButton;

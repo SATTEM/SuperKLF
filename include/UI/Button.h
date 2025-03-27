@@ -1,27 +1,9 @@
-#ifndef UICOMPONENT_H
-#define UICOMPONENT_H
-#include <string>
+#ifndef BUTTON_H
+#define BUTTON_H
 extern "C"{
 	#include "raylib.h"
 }
-namespace UI{
-	const int BASIC_BUTTON_WIDTH = 200;
-	const int BASIC_BUTTON_HEIGHT = 50;
-	const float WIDTH_RADIO=0.9f;
-	const float HEIGHT_RADIO=0.5f;
-	const float countTextPosX(const std::string& str,const int origin,const int fontSize,const int offset=0);
-}
-
-class BulletDisplay{
-private:
-	Rectangle box;
-	float bulletScale=0.f;
-public:
-	BulletDisplay(const Rectangle& b):box(b){}
-	~BulletDisplay()=default;
-	void setBulletScale(const float scale){bulletScale=scale;}
-	void Draw()const;
-};
+#include<string>
 
 class Button{
 protected:

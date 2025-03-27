@@ -1,8 +1,9 @@
-#include "UI.h"
+#include "UI/UI.h"
+#include "UI/UIUtility.h"
+#include "UI/Information.h"
 #include "DataManager.h"
 #include "Entity.h"
 #include "RewardSystem.h"
-#include "UIComponent.h"
 #include <string>
 #include <random>
 extern "C"{
@@ -98,7 +99,7 @@ const bool DefeatUI::isRestart()const{
 VictoryUI::VictoryUI(){
 	const int screenHeight=GetScreenHeight();
 	const int screenWidth=GetScreenWidth();
-	refreshBtn={{screenWidth/2.0f,
+	refreshBtn={{screenWidth*0.8f,
 		screenHeight*0.8f,
 		UI::BASIC_BUTTON_WIDTH,
 		UI::BASIC_BUTTON_HEIGHT},
@@ -153,8 +154,15 @@ void VictoryUI::Draw() const{
 	const int screenHeight=GetScreenHeight();
 	const int screenWidth=GetScreenWidth();
 	DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK,0.5f));
-	std::string subTitle=R"(You passed %d levels!)";
-	DrawText(TextFormat(subTitle.c_str(),DataManager::Get().getPassedLevel()), UI::countTextPosX(subTitle, screenWidth/2, 2*UI::FONTSIZE), 200, 2*UI::FONTSIZE, RED);
+	int passedLevel=DataManager::Get().getPassedLevel();
+	if(passedLevel==0){
+		std::string subTitle="Choose your first boost!";
+		DrawText(TextFormat(subTitle.c_str()), UI::countTextPosX(subTitle, screenWidth/2, 2*UI::FONTSIZE), 200, 2*UI::FONTSIZE, RED);
+	}else{
+		std::string subTitle=R"(You passed %d levels!)";
+		DrawText(TextFormat(subTitle.c_str(),passedLevel), UI::countTextPosX(subTitle, screenWidth/2, 2*UI::FONTSIZE), 200, 2*UI::FONTSIZE, RED);
+	}
+	
 	for(int i=0;i<3;i++){
 		rewardBtn[i].Draw();
 	}
