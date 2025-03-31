@@ -16,6 +16,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 	UIComponent
 	SpecialEffect
 	ResourceManager
-	Collision
+	Tools
 	raylib)
 target_link_directories(${PROJECT_NAME} PRIVATE ${LIBPATH})

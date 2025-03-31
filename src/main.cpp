@@ -1,13 +1,14 @@
 #ifndef ASSETS_IMAGE_PATH
 #define ASSETS_IMAGE_PATH
-#include <exception>
-#include <memory>
+
 #endif
 
 extern "C" {
 	#include "raylib.h"
 }
 #include <fstream>
+#include <memory>
+#include <string>
 #include "Effect/EffectManager.h"
 #include "DataManager.h"
 #include "GameStageFwd.h"
@@ -22,13 +23,13 @@ const Vector2 enemyPos={640,100};
 const Vector2 playerVel={0,-1};
 const Vector2 enemyVel={0,1};
 
-void PreInit();
+void PreInit(int argc,char* argv[]);
 void LateInit();
 void clear();
 const bool shouldEnd();
 
-int main(void){
-	PreInit();
+int main(int argc,char* argv[]){
+	PreInit(argc,argv);
 	InitWindow(WindowWidth,WindowHeight,"SuperKLF");
 	StageController& gameCTRL=StageController::Get();
 	LateInit();
@@ -40,6 +41,7 @@ int main(void){
 		DrawFPS(0, 0);
 		gameCTRL.update();
 		EndDrawing();
+		gameCTRL.frameClean();
 	}
 	clear();
 	CloseWindow();
@@ -53,11 +55,26 @@ const bool shouldEnd(){
 }
 //在raylib初始化前的初始化
 void RegisterEffects();
-
-void PreInit(){
+void setTrace(const int,char[]);
+void PreInit(int argc,char* argv[]){
+	setTrace(argc,argv[1]);
 	RegisterEffects();
 }
 //预初始化的实现
+void setTrace(const int argc,char cmd[]){
+	if(argc==1){
+		SetTraceLogLevel(LOG_ERROR);
+		return;
+	}
+	std::string level=cmd;
+	if(level=="--info"){
+		SetTraceLogLevel(LOG_INFO);
+	}else if(level=="--warning"){
+		SetTraceLogLevel(LOG_WARNING);
+	}else{
+		SetTraceLogLevel(LOG_ERROR);
+	}
+}
 void RegisterEffects(){
 	std::ifstream file(DATA::EFFECT_PATH);
 	nlohmann::json effects=nlohmann::json::parse(file);

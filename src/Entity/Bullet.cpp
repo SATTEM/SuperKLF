@@ -8,7 +8,7 @@ extern "C"{
 }
 #include "Bullet.h"
 #include "Entity.h"
-#include "Collision.h"
+#include "Tools.h"
 #include "ResourceManager.h"
 #include "Event/EventSystem.h"
 

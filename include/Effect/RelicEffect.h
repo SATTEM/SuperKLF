@@ -6,30 +6,31 @@ extern "C"{
 }
 #include "nlohmann/json.hpp"
 #include "Event/EventFWD.h"
+#include "UI/UIUtility.h"
 class Entity;
 class RelicEffect{
 protected:
-	std::string name;
+	std::wstring name;
 	bool isActive=false;
-	std::string description;
+	std::wstring description;
 public:
 	RelicEffect()=default;
 	RelicEffect(const nlohmann::json& params){
-		name=params["name"].get<std::string>();
-		description=params["name"].get<std::string>();
+		name=UI::UTFTowstr(params["name"].get<std::string>());
+		description=UI::UTFTowstr(params["name"].get<std::string>());
 	}
 	virtual ~RelicEffect()=default;
 	virtual void onTrigger(Entity& relatedEntity)=0;
-	const std::string getDescription() const{return description;}
-	const std::string getName()const{return name;}
+	const std::wstring getDescription() const{return description;}
+	const std::wstring getName()const{return name;}
 	virtual Occasion getOccasion() const=0;
 };
 
 class NullRelicEffect:public RelicEffect{
 public:
 	NullRelicEffect(const nlohmann::json& params):RelicEffect(){
-		description="No effect";
-		name="NULL";
+		description=L"No effect";
+		name=L"NULL";
 	}
 	void onTrigger(Entity& relatedEntity) override final{
 		TraceLog(LOG_WARNING, "Applying a NullRelicEffect");

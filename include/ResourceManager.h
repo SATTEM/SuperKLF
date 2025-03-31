@@ -1,6 +1,8 @@
 #ifndef RESOURCEMANAGER_H
 #define RESOURCEMANAGER_H
+#include <list>
 #include <unordered_map>
+#include <unordered_set>
 #include <string>
 extern "C"{
 	#include "raylib.h"
@@ -8,10 +10,16 @@ extern "C"{
 class ResourceManager{
 private:
 	std::unordered_map<std::string, Texture2D> textures;
+	unsigned char* fontFile;
+	std::wstring includedChars;
+	std::unordered_set<wchar_t> charsSet;
 	Font font;
-	bool isFontAssigned=false;
-	ResourceManager()=default;
+	std::list<Font> usedFonts;
+	int fontFileLength;
+	bool needNewFont=false;
+	ResourceManager();
 	~ResourceManager()=default;
+	const Font& loadWords(const std::string&);
 public:
 	ResourceManager(const ResourceManager&)=delete;
 	void operator=(const ResourceManager&)=delete;
@@ -23,9 +31,10 @@ public:
 	std::string resizeTexture(const std::string path,const int width,const int height);
 	const Texture2D& loadTexture(const std::string path);
 	std::unordered_map<std::string, Texture2D>& getTextures(){return textures;}
-	const Font& loadFont();
+	const Font& getFont(const std::string&);
 	void unloadTexture(const std::string path);
 	void cleanUp();
+	void cleanFont();
 };
 
 #endif

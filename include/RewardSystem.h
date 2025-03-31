@@ -11,15 +11,15 @@ extern "C"{
 class Entity;
 class Reward{
 protected:
-	std::string name;
-	std::string description;
+	std::wstring name;
+	std::wstring description;
 	std::shared_ptr<InstantEffect> effect;
 	Texture2D icon;
 public:
 	Reward(const nlohmann::json& reward);
 	~Reward()=default;
 	void apply(Player& player);
-	const std::string& getDescription()const{return description;}
-	const std::string& getName()const{return name;}
+	const std::wstring& getDescription()const{return description;}
+	const std::wstring& getName()const{return name;}
 };
 #endif

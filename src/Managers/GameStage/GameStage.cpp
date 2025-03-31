@@ -2,6 +2,7 @@
 #include "Entity.h"
 #include "Event/EventFWD.h"
 #include "Event/EventSystem.h"
+#include "ResourceManager.h"
 extern "C"{
 	#include "raylib.h"
 }
@@ -131,4 +132,7 @@ void StageController::mainMenuUpdate(){
 		transitionTo(GameStage::Victory);
 		return;
 	}
+}
+void StageController::frameClean()const{
+	ResourceManager::Get().cleanFont();
 }

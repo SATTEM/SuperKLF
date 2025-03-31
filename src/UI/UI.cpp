@@ -6,6 +6,7 @@
 #include "RewardSystem.h"
 #include <string>
 #include <random>
+#include <sys/select.h>
 #include "UI/UIUtility.h"
 extern "C"{
 	#include "raylib.h"
@@ -21,7 +22,7 @@ MainMenuUI::MainMenuUI(){
 			UI::BASIC_BUTTON_WIDTH,
 			UI::BASIC_BUTTON_HEIGHT
 		},
-		"开始游戏",
+		L"开始游戏",
 		ORANGE
 	};
 	exitButton={
@@ -31,7 +32,7 @@ MainMenuUI::MainMenuUI(){
 			UI::BASIC_BUTTON_WIDTH,
 			UI::BASIC_BUTTON_HEIGHT
 		},
-		"离开",
+		L"离开",
 		ORANGE
 	};
 	continueButton={
@@ -41,7 +42,7 @@ MainMenuUI::MainMenuUI(){
 			UI::BASIC_BUTTON_WIDTH,
 			UI::BASIC_BUTTON_HEIGHT
 		},
-		"继续(不可用)",
+		L"继续(不可用)",
 		ORANGE
 	};
 	continueButton.setAvailibility(false);
@@ -49,7 +50,7 @@ MainMenuUI::MainMenuUI(){
 void MainMenuUI::Draw()const{
 	ClearBackground(WHITE);
 	std::string title="测试";
-	UI::drawText(title,GetScreenWidth()/2,GetScreenHeight()*0.2f,2*UI::FONTSIZE,RED);
+	UI::drawText(title,GetScreenWidth()/2.f,GetScreenHeight()*0.2f,2*UI::FONTSIZE,RED);
 	startButton.Draw();
 	exitButton.Draw();
 	continueButton.Draw();
@@ -67,9 +68,9 @@ void DefeatUI::Draw() const{
 	const int screenWidth=GetScreenWidth();	
 	DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK,0.5f));
 	std::string title="Mamba Out!";
-	std::string subTitle=R"(You have passed %d levels!)";
-	DrawText(title.c_str(),UI::countTextPosX(title,screenWidth/2,2*UI::FONTSIZE),screenHeight*0.2f,2*UI::FONTSIZE,RED);
-	DrawText(TextFormat(subTitle.c_str(),DataManager::Get().getPassedLevel()), UI::countTextPosX(subTitle, screenWidth/2, UI::FONTSIZE), screenHeight*0.2f+150, UI::FONTSIZE, RED);
+	std::string subTitle="你通过了"+std::to_string(DataManager::Get().getPassedLevel())+"关！";
+	UI::drawText(title, screenWidth/2.f, screenHeight*0.2f, UI::FONTSIZE*2, RED);
+	UI::drawText(subTitle, screenWidth/2.f, screenHeight*0.2f+150, UI::FONTSIZE, RED);
 	restartButton.Draw();
 	exitButton.Draw();
 }
@@ -82,13 +83,13 @@ DefeatUI::DefeatUI(){
 		screenHeight*0.6f,
 		UI::BASIC_BUTTON_WIDTH,
 		UI::BASIC_BUTTON_HEIGHT},
-	"[Space]Restart",ORANGE};
+	L"[Space]Restart",ORANGE};
 	exitButton={{
 		screenWidth/2.0f,
 		screenHeight*0.75f,
 		UI::BASIC_BUTTON_WIDTH,
 		UI::BASIC_BUTTON_HEIGHT},
-		"Quit",ORANGE};
+		L"Quit",ORANGE};
 }
 const bool DefeatUI::isExit()const{
 	return exitButton.isPressed();
@@ -104,7 +105,7 @@ VictoryUI::VictoryUI(){
 		screenHeight*0.8f,
 		UI::BASIC_BUTTON_WIDTH,
 		UI::BASIC_BUTTON_HEIGHT},
-		"Refresh",ORANGE};
+		L"刷新",ORANGE};
 	float gap=(screenWidth-3*(UI::BASIC_BUTTON_WIDTH))/5.f;
 	for(int i=0;i<3;i++){
 		rewardBtn[i]={
@@ -112,7 +113,7 @@ VictoryUI::VictoryUI(){
 			screenHeight*0.5f,
 			UI::BASIC_BUTTON_WIDTH,
 			UI::BASIC_BUTTON_HEIGHT},
-			"Reward",ORANGE,"Explain"};
+			L"Reward",ORANGE,L"Explain"};
 	}			
 }
 const bool VictoryUI::isRefreshButtonPressed()const{
@@ -140,7 +141,7 @@ void VictoryUI::tryGenerateRewards(Player& player){
 		}else{
 			refreshBtn.setAvailibility(true);
 		}
-		refreshBtn.setAddition("(-"+std::to_string(DataManager::Get().getRefreshMoney())+")");
+		refreshBtn.setAddition(L"(-"+std::to_wstring(DataManager::Get().getRefreshMoney())+L")");
 	}
 }
 void VictoryUI::chooseReward(const int i,Player& player){
@@ -160,8 +161,7 @@ void VictoryUI::Draw() const{
 		std::string subTitle="选择你的初始奖励！";
 		UI::drawText(subTitle,screenWidth/2.f,200,2*UI::FONTSIZE,RED);
 	}else{
-		std::string subTitle="你通过了"+passedLevel;
-		subTitle+="关！";
+		std::string subTitle="你通过了"+std::to_string(passedLevel)+"关！";
 		UI::drawText(subTitle,screenWidth/2.f,200,2*UI::FONTSIZE,RED);
 	}
 	

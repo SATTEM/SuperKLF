@@ -34,6 +34,7 @@ public:
 	void update();
 	const GameStage getCurrentStage() const {return currentStage;}
 	void transitionTo(const GameStage stage){currentStage=stage;}
+	void frameClean()const;
 };
 
 #endif

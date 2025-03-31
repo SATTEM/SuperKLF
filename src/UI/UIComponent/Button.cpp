@@ -1,8 +1,8 @@
 #include "UI/Button.h"
-#include "Collision.h"
+#include "Tools.h"
 #include "ResourceManager.h"
 #include "UI/UIUtility.h"
-Button::Button(Rectangle r, std::string t, Color c) {
+Button::Button(Rectangle r, std::wstring t, Color c) {
     rect = {r.x-r.width/2.f,r.y-r.height/2.f,r.width,r.height};
 	if(rect.x<0){rect.x=0;}
 	if(rect.y<0){rect.y=0;}
@@ -20,13 +20,15 @@ const bool Button::isPressed()const{
 void Button::resetPosAndSize(){
     const float maxTextWidth = rect.width * UI::WIDTH_RADIO;
     const float maxTextHeight = rect.height * UI::HEIGHT_RADIO;
-	const Font& font=ResourceManager::Get().loadFont();
+	std::wstring fullTextW=getFullText();
+	std::string fullText=UI::wstrToUTF(fullTextW);
+	const Font& font=ResourceManager::Get().getFont(fullText);
     int low = UI::MIN_FONT_SIZE;
     int high = int(maxTextHeight);
     int bestSize = UI::MIN_FONT_SIZE;
     while (low <= high) {
         int mid = (low + high) / 2;
-        Vector2 textSize = MeasureTextEx(font, text.c_str(), mid, 1);
+        Vector2 textSize = MeasureTextEx(font, fullText.c_str(), mid, 1);
         if (textSize.x <= maxTextWidth) {
             bestSize = mid;
             low = mid + 1;
@@ -35,11 +37,14 @@ void Button::resetPosAndSize(){
         }
     }
     fontSize = bestSize;
-	Vector2 textSize=MeasureTextEx(font, text.c_str(), fontSize, 1);
+	Vector2 textSize=MeasureTextEx(font, fullText.c_str(), fontSize, 1);
     textPos = {
-		rect.x-rect.width/2.f,
+		rect.x + rect.width/2.f,
         rect.y + (rect.height -textSize.y)/2
     };	
+}
+const std::wstring Button::getFullText()const{
+	return text;
 }
 
 void Button::Draw() const{
@@ -58,6 +63,13 @@ void Button::Draw() const{
 	UI::drawText(text,textPos.x,textPos.y,fontSize,WHITE);
 	EndScissorMode();
 }
+void ButtonWithExplain::setExplain(const std::wstring& str){
+	if(explain==str){return;}
+	explain=str;
+}
+const std::wstring ButtonWithExplain::getFullText()const{
+	return text;
+}
 void ButtonWithExplain::Draw() const{
 	Button::Draw();
 	if(isHoovered()&&available){
@@ -68,14 +80,19 @@ void ButtonWithExplain::DrawExplain() const{
     Rectangle explainBox={
         rect.x,rect.y+rect.height,rect.width,rect.height*2.5f
     };
+	std::string explainUTF=UI::wstrToUTF(explain);
+	Vector2 textSize = MeasureTextEx(ResourceManager::Get().getFont(explainUTF), explainUTF.c_str(), UI::EXPLAIN_FONTSIZE, 1);
     DrawRectangleRec(explainBox, ColorBrightness(color, 0.15f));
-    Vector2 position={explainBox.x,explainBox.y};
+    Vector2 position={
+		explainBox.x+textSize.x/2,
+        explainBox.y
+	};
 	UI::drawText(explain,position.x,position.y,UI::EXPLAIN_FONTSIZE,WHITE);
 }
 
 void ButtonWithNumber::Draw() const{
 	Color drawColor =color;
-	const Font& font=ResourceManager::Get().loadFont();
+	const Font& font=ResourceManager::Get().getFont(UI::wstrToUTF(text+addition));
 	if(available){
 		if(isPressed()){
 			drawColor=ColorBrightness(color, -0.3f);
@@ -89,4 +106,15 @@ void ButtonWithNumber::Draw() const{
 	BeginScissorMode(rect.x, rect.y, rect.width, rect.height);
 	UI::drawText(text+addition,textPos.x,textPos.y,fontSize,WHITE);
 	EndScissorMode();
+}
+
+void ButtonWithNumber::setAddition(const std::wstring& str){
+	if(str==addition){
+		return;
+	}
+	addition=str;
+	resetPosAndSize();
+}
+const std::wstring ButtonWithNumber::getFullText()const{
+	return text+addition;
 }

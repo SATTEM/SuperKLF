@@ -17,9 +17,9 @@
         {
             "id": "double_shoot_relic",
             "params": { 
-                "name":"Fast Shooter",
+                "name":"快枪手",
                 "bullet_path": "res/image/extra_bullet.png",
-                "description": "Shoot two bullets every time"
+                "description": "又快又快:每次攻击额外射出一发子弹"
          }
         },
         {

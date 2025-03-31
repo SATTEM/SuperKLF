@@ -4,46 +4,48 @@ extern "C"{
 	#include "raylib.h"
 }
 #include<string>
-#include "UIUtility.h"
 
 class Button{
 protected:
 	bool available=true;
 	Rectangle rect;
-	std::string text;
+	std::wstring text;
 	Color color;
 	int fontSize;
 	Vector2 textPos;
 	void resetPosAndSize();
+	virtual const std::wstring getFullText()const;
 public:
 	virtual void Draw() const;
 	const Rectangle& getRect() const{return rect;}
 	void setAvailibility(const bool a){available=a;}
-	void setText(const std::string& str){text=str;resetPosAndSize();}
-	std::string getText()const{return text;}
+	void setText(const std::wstring& str){text=str;resetPosAndSize();}
+	std::wstring getText()const{return text;}
 	Button()=default;
-	Button(Rectangle r,std::string t,Color c);
+	Button(Rectangle r,std::wstring t,Color c);
 	const bool isHoovered()const;
 	const bool isPressed()const;
 };
 class ButtonWithNumber:public Button{
 private:
-	std::string addition;
+	std::wstring addition;
+	const std::wstring getFullText()const override;
 public:
 	ButtonWithNumber()=default;
-	ButtonWithNumber(Rectangle r,std::string t,Color c,std::string a="")
+	ButtonWithNumber(Rectangle r,std::wstring t,Color c,std::wstring a=L"")
 	:Button(r,t,c),addition(a){}
-	void setAddition(const std::string& str){addition=str;}
+	void setAddition(const std::wstring& str);
 	void Draw() const override;
 };
 class ButtonWithExplain:public Button{
 private:
-	std::string explain;
+	std::wstring explain;
 	void DrawExplain() const;
+	const std::wstring getFullText()const override;
 public:
 	ButtonWithExplain()=default;
-	ButtonWithExplain(Rectangle r,std::string t,Color c,std::string e):Button(r,t,c),explain(e){}
-	void setExplain(const std::string& str){explain=str;}
+	ButtonWithExplain(Rectangle r,std::wstring t,Color c,std::wstring e):Button(r,t,c),explain(e){}
+	void setExplain(const std::wstring& str);
 	void Draw() const override;
 };
 
