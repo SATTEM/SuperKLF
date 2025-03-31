@@ -46,10 +46,18 @@ void ResourceManager::unloadTexture(const std::string path){
 
 const Font& ResourceManager::loadFont(){
 	if(isFontAssigned){return font;}
-	if(UI::FONT_PATH==""){
+	if(ASSETS_FONT_PATH==""){
 		font=GetFontDefault();
 	}else{
-		font=LoadFont(UI::FONT_PATH.c_str());
+		FILE* file=fopen(ASSETS_FONT_PATH "font.ttf","rb");
+		fseek(file,0,SEEK_END);
+		int length=ftell(file);
+		fseek(file,0,SEEK_SET);
+		unsigned char* buffer=(unsigned char*)malloc(length+1);
+		fread(buffer,1,length,file);
+		font=LoadFontFromMemory(".ttf",buffer,length,256,0,0);
+		delete buffer;
+		isFontAssigned=true;
 	}
 	return font;
 }

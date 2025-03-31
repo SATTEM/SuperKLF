@@ -1,9 +1,15 @@
 #ifndef UIUTILITY_H
 #define UIUTILITY_H
 #include<string>
+extern "C"{
+	#include "raylib.h"
+}
 namespace UI{
 	const float countTextPosX(const std::string& str,const int origin,const int fontSize,const int offset=0);
+	
+	void drawText(const std::string& text,const float posX,const float posY,const int fontSize,const Color& color);
 }
+
 namespace UI {
 
 	const int MAX_ENGLISH_EXPLAIN_LINE=24;

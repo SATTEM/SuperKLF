@@ -6,6 +6,7 @@
 #include "RewardSystem.h"
 #include <string>
 #include <random>
+#include "UI/UIUtility.h"
 extern "C"{
 	#include "raylib.h"
 }
@@ -20,7 +21,7 @@ MainMenuUI::MainMenuUI(){
 			UI::BASIC_BUTTON_WIDTH,
 			UI::BASIC_BUTTON_HEIGHT
 		},
-		"Start",
+		"开始游戏",
 		ORANGE
 	};
 	exitButton={
@@ -30,7 +31,7 @@ MainMenuUI::MainMenuUI(){
 			UI::BASIC_BUTTON_WIDTH,
 			UI::BASIC_BUTTON_HEIGHT
 		},
-		"Exit",
+		"离开",
 		ORANGE
 	};
 	continueButton={
@@ -40,15 +41,15 @@ MainMenuUI::MainMenuUI(){
 			UI::BASIC_BUTTON_WIDTH,
 			UI::BASIC_BUTTON_HEIGHT
 		},
-		"Continue(Not supported)",
+		"继续(不可用)",
 		ORANGE
 	};
 	continueButton.setAvailibility(false);
 }
 void MainMenuUI::Draw()const{
 	ClearBackground(WHITE);
-	std::string title="SPKLF";
-	DrawText(title.c_str(), UI::countTextPosX(title, GetScreenWidth()/2, UI::FONTSIZE*2), GetScreenHeight()*0.2f, 2*UI::FONTSIZE, RED);
+	std::string title="测试";
+	UI::drawText(title,GetScreenWidth()/2,GetScreenHeight()*0.2f,2*UI::FONTSIZE,RED);
 	startButton.Draw();
 	exitButton.Draw();
 	continueButton.Draw();
@@ -156,11 +157,12 @@ void VictoryUI::Draw() const{
 	DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK,0.5f));
 	int passedLevel=DataManager::Get().getPassedLevel();
 	if(passedLevel==0){
-		std::string subTitle="Choose your first boost!";
-		DrawText(TextFormat(subTitle.c_str()), UI::countTextPosX(subTitle, screenWidth/2, 2*UI::FONTSIZE), 200, 2*UI::FONTSIZE, RED);
+		std::string subTitle="选择你的初始奖励！";
+		UI::drawText(subTitle,screenWidth/2.f,200,2*UI::FONTSIZE,RED);
 	}else{
-		std::string subTitle=R"(You passed %d levels!)";
-		DrawText(TextFormat(subTitle.c_str(),passedLevel), UI::countTextPosX(subTitle, screenWidth/2, 2*UI::FONTSIZE), 200, 2*UI::FONTSIZE, RED);
+		std::string subTitle="你通过了"+passedLevel;
+		subTitle+="关！";
+		UI::drawText(subTitle,screenWidth/2.f,200,2*UI::FONTSIZE,RED);
 	}
 	
 	for(int i=0;i<3;i++){

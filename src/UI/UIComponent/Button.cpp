@@ -37,14 +37,13 @@ void Button::resetPosAndSize(){
     fontSize = bestSize;
 	Vector2 textSize=MeasureTextEx(font, text.c_str(), fontSize, 1);
     textPos = {
-		UI::countTextPosX(text, rect.x, fontSize,(rect.width/2)),
+		rect.x-rect.width/2.f,
         rect.y + (rect.height -textSize.y)/2
     };	
 }
 
 void Button::Draw() const{
 	Color drawColor =color;
-	const Font& font=ResourceManager::Get().loadFont();
 	if(available){
 		if(isPressed()){
 			drawColor=ColorBrightness(color, -0.3f);
@@ -56,7 +55,7 @@ void Button::Draw() const{
 	}
 	DrawRectangleRec(rect, drawColor);
 	BeginScissorMode(rect.x, rect.y, rect.width, rect.height);
-	DrawTextEx(font, text.c_str(), textPos, fontSize, 1, WHITE);
+	UI::drawText(text,textPos.x,textPos.y,fontSize,WHITE);
 	EndScissorMode();
 }
 void ButtonWithExplain::Draw() const{
@@ -71,7 +70,7 @@ void ButtonWithExplain::DrawExplain() const{
     };
     DrawRectangleRec(explainBox, ColorBrightness(color, 0.15f));
     Vector2 position={explainBox.x,explainBox.y};
-    DrawTextEx(ResourceManager::Get().loadFont(), explain.c_str(), position, UI::EXPLAIN_FONTSIZE, 1, WHITE);
+	UI::drawText(explain,position.x,position.y,UI::EXPLAIN_FONTSIZE,WHITE);
 }
 
 void ButtonWithNumber::Draw() const{
@@ -88,6 +87,6 @@ void ButtonWithNumber::Draw() const{
 	}
 	DrawRectangleRec(rect, drawColor);
 	BeginScissorMode(rect.x, rect.y, rect.width, rect.height);
-	DrawTextEx(font, (text+addition).c_str(), textPos, fontSize, 1, WHITE);
+	UI::drawText(text+addition,textPos.x,textPos.y,fontSize,WHITE);
 	EndScissorMode();
 }

@@ -5,9 +5,6 @@
 extern "C"{
 	#include "raylib.h"
 }
-namespace UI {
-	const std::string FONT_PATH="";
-}
 class ResourceManager{
 private:
 	std::unordered_map<std::string, Texture2D> textures;
