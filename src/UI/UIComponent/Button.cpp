@@ -11,7 +11,7 @@ Button::Button(Rectangle r, std::wstring t, Color c) {
 	resetPosAndSize();
 }
 const bool Button::isHoovered()const{
-	return Collision::checkIsTouchButton(*this);
+	return Collision::checkMouseTouch(rect);
 }
 const bool Button::isPressed()const{
 	return  isHoovered()&&IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
@@ -73,21 +73,8 @@ const std::wstring ButtonWithExplain::getFullText()const{
 void ButtonWithExplain::Draw() const{
 	Button::Draw();
 	if(isHoovered()&&available){
-        DrawExplain();
+        explain.draw();
 	}  
-}
-void ButtonWithExplain::DrawExplain() const{
-    Rectangle explainBox={
-        rect.x,rect.y+rect.height,rect.width,rect.height*2.5f
-    };
-	std::string explainUTF=UI::wstrToUTF(explain);
-	Vector2 textSize = MeasureTextEx(ResourceManager::Get().getFont(explainUTF), explainUTF.c_str(), UI::EXPLAIN_FONTSIZE, 1);
-    DrawRectangleRec(explainBox, ColorBrightness(color, 0.15f));
-    Vector2 position={
-		explainBox.x+textSize.x/2,
-        explainBox.y
-	};
-	UI::drawText(explain,position.x,position.y,UI::EXPLAIN_FONTSIZE,WHITE);
 }
 
 void ButtonWithNumber::Draw() const{

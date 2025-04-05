@@ -1,6 +1,7 @@
 #include "UI/Information.h"
 #include "UI/UIUtility.h"
 #include "GameStage.h"
+#include "Tools.h"
 void BulletDisplay::Draw() const{
 	Vector2 nowPos={box.x+UI::BULLET_DISPLAY_OFFSET,box.y+UI::BULLET_DISPLAY_OFFSET};
 	DrawRectangle(box.x,box.y,box.width,box.height,Fade(GRAY,0.4));
@@ -12,5 +13,23 @@ void BulletDisplay::Draw() const{
 			nowPos.x=box.x+UI::BULLET_DISPLAY_OFFSET;
 			nowPos.y+=BULLET::BULLET_SIZE.y;
 		}
+	}
+}
+
+TextureDetailedDisplay::TextureDetailedDisplay(const Texture2D& tex,const std::wstring& text,const Vector2& pos,const int lineLength,const int fontSize)
+:texture(tex),detail(text),position(pos){
+	if(!IsTextureValid(texture)){
+		TraceLog(LOG_ERROR,"[Display] invalid texture");
+	}
+	rect={position.x,position.y,float(texture.width),float(texture.height)};
+	detail.setRectangle({position.x,position.y+texture.height,float(texture.width),float(texture.height)});
+	detail.setFontSize(fontSize);
+	detail.setLineLength(length);
+}
+
+void TextureDetailedDisplay::Draw()const{
+	DrawTextureV(texture,position,WHITE);
+	if(Collision::checkMouseTouch(rect)){
+		detail.draw();
 	}
 }

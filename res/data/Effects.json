@@ -18,14 +18,15 @@
             "id": "double_shoot_relic",
             "params": { 
                 "name":"快枪手",
-                "bullet_path": "res/image/extra_bullet.png",
-                "description": "又快又快:每次攻击额外射出一发子弹"
+                "description": "又快又快:每次攻击额外射出一发子弹",
+                "icon_name":"fallback.png"
          }
         },
         {
-            "id":" ",
+            "id":"",
             "type":" ",
-            "params":{}
+            "params":{
+            }
         }
     ]
 }

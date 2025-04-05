@@ -13,6 +13,7 @@
   },
   {
     "name":"新遗物",
+    "id":"new_relic",
     "description":"得到一个新遗物: ",
     "icon_path":"",
     "effectID":"new_relic"

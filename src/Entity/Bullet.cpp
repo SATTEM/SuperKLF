@@ -15,13 +15,16 @@ extern "C"{
 const bool isOutOfScreen(const Vector2& pos);
 
 Bullet::Bullet(const std::string texPath,const Vector2& vel,const Vector2& pos,const int dmg,const bool act)
-	:position(pos),velocity(vel),active(act),damage(dmg),texturePath(texPath){
-		Texture2D origin=ResourceManager::Get().loadTexture(texPath);
-		texturePath=ResourceManager::Get().resizeTexture(texPath, BULLET::BULLET_SIZE.x, BULLET::BULLET_SIZE.y);
-		texture=ResourceManager::Get().loadTexture(texturePath);
-		countColliderRadius();
-		effects.push_back(std::make_shared<GiveDamage>(GiveDamage(damage)));
+:position(pos),velocity(vel),active(act),damage(dmg),texturePath(texPath){
+	Texture2D origin=ResourceManager::Get().loadTexture(texPath);
+	texturePath=ResourceManager::Get().resizeTexture(texPath, BULLET::BULLET_SIZE.x, BULLET::BULLET_SIZE.y);
+	texture=ResourceManager::Get().loadTexture(texturePath);
+	countColliderRadius();
+	effects.push_back(std::make_shared<GiveDamage>(GiveDamage(damage)));
+	if(idToBullet.find("Bullet")!=idToBullet.end()){
+		idToBullet.emplace("Bullet",*this);
 	}
+}
 void Bullet::countColliderRadius(const Vector2 size){
 	colliderRadius=drawScale*(std::min(size.x,size.y)/2);
 }
@@ -36,7 +39,7 @@ Bullet::Bullet(const Bullet& proto,const Vector2& begin)
 std::unique_ptr<Bullet> Bullet::shoot(const Vector2& begin){
 	if(active==false){
 		//子弹原型时（只有原型会调用这个函数）
-		return std::make_unique<Bullet>(*this,begin);
+		return std::unique_ptr<Bullet>(new Bullet(*this,begin));
 	}else{
 		return nullptr;
 	}

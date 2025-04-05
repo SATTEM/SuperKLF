@@ -22,6 +22,15 @@ bool Collision::checkBulletEntity(const Bullet &aBullet, const Entity &aEntity){
 bool Collision::checkEntityEntity(const Entity &a, const Entity &b){
 	return CheckCollisionRecs(a.getCollider(), b.getCollider());
 }
-bool Collision::checkIsTouchButton(const Button &aButton){
-	return CheckCollisionPointRec(GetMousePosition(), aButton.getRect());
+bool Collision::checkMouseTouch(const Rectangle& rect){
+	return CheckCollisionPointRec(GetMousePosition(), rect);
+}
+const bool Check::isJsonValid(const nlohmann::json& j,const std::list<std::string>& items){
+	bool valid=true;
+	for(const auto& i:items){
+		if(!j.contains(i)){
+			valid=false;
+		}
+	}
+	return valid;
 }

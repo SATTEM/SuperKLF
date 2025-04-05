@@ -4,7 +4,7 @@ extern "C"{
 	#include "raylib.h"
 }
 #include<string>
-
+#include "UIwheel.h"
 class Button{
 protected:
 	bool available=true;
@@ -39,12 +39,13 @@ public:
 };
 class ButtonWithExplain:public Button{
 private:
-	std::wstring explain;
-	void DrawExplain() const;
+	Detail explain;
 	const std::wstring getFullText()const override;
 public:
 	ButtonWithExplain()=default;
-	ButtonWithExplain(Rectangle r,std::wstring t,Color c,std::wstring e):Button(r,t,c),explain(e){}
+	ButtonWithExplain(Rectangle r,std::wstring t,Color c,std::wstring e):Button(r,t,c),explain(e,c,WHITE,UI::EXPLAIN_LINE_MAX_CHAR){
+		explain.setRectangle({rect.x,rect.y+rect.height,rect.width,rect.height*2.5f});
+	}
 	void setExplain(const std::wstring& str);
 	void Draw() const override;
 };
