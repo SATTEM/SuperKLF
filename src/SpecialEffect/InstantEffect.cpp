@@ -3,6 +3,7 @@
 #include "Entity.h"
 #include <string>
 
+
 SpeedBoost::SpeedBoost(const nlohmann::json& params):InstantEffect(){
 	rate=params["rate"].get<float>();
 }

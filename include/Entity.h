@@ -10,6 +10,7 @@ extern "C"{
 #include <string>
 #include "Bullet.h"
 #include "Effect/RelicEffect.h"
+#include "UI/Information.h"
 namespace GameInit{
 	const int Start_Money=33;
 }
@@ -35,15 +36,19 @@ public:
 	virtual void Update(const float deltaTime)=0;
 	void fire(Vector2 pos={0,0});
 	void fireBlast();
+	void reset();
+	
 	void takeDamage(const int damage);
 	bool isAlive() const {return currentHP>0;}
 	bool canCastSkill() const{return energy>=maxEnergy;}
-	void reset();
+	
+	virtual void addRelic(std::shared_ptr<RelicEffect> relic);
+	virtual void removeRelic(const int);
 	void addBullet(Bullet aBullet){bulletPattern.push_back(std::move(aBullet));}
 	void removeBullet(const int index){bulletPattern.erase(bulletPattern.begin()+index);}
 	void setBlast(Blast aBlast){blast=std::move(aBlast);}
 	void setOpponent(Entity& opp){opponent=&opp;}
-	void addRelic(std::shared_ptr<RelicEffect> relic);
+
 	float& getAttackTimer(){return attackTimer;}
 	float& getAttackInterVale(){return attackInterval;}
 	Entity& getOpponent(){return *opponent;}
@@ -62,19 +67,21 @@ private:
 class Player:public Entity{
 private:
 	int money=GameInit::Start_Money;
+	std::vector<TextureDetailedDisplay> relicDisplays;
 public:
-	Player(const std::string texPath,const Vector2& pos,const int hp=100
-	,const float interval=1,const int MAXenergy=100,const int rise=10)
-	:Entity(texPath,pos,hp,interval,MAXenergy,rise){}
+	Player(const std::string texPath,const Vector2& pos,const int hp,const float interval,const int MAXenergy,const int rise);
 	void Update(const float deltaTime) override;
 	void setAttackInterval(const float rate){attackInterval*=rate;}
-	void MaxHealthBoost(const int val){maxHP+=val;}
-	void MaxHealthBoost(const float rate){maxHP*=rate;}
+	void addRelic(std::shared_ptr<RelicEffect> relic) override;
+	void removeRelic(const int) override;
 	void addMoney(const int value){money+=value;}
 	const bool deductMoney(const int value){
 		if(money-value<0){return false;}
 		else{money-=value;return true;}
 	}
+	void MaxHealthBoost(const int val){maxHP+=val;}
+	void MaxHealthBoost(const float rate){maxHP*=rate;}
+
 	const int getMoney() const{return money;}
 private:
 	void Draw() const override;

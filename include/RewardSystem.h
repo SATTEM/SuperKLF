@@ -11,10 +11,11 @@ extern "C"{
 class Entity;
 class Reward{
 protected:
-	std::wstring name;
-	std::wstring description;
+	std::wstring name,description;
 	std::shared_ptr<InstantEffect> effect;
-	Texture2D icon;
+	void toNewRelicReward(const std::string&);
+	void toNewBulletReward(const std::string&);
+	void adjust(const std::string&);
 public:
 	Reward(const nlohmann::json& reward);
 	~Reward()=default;

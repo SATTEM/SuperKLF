@@ -47,6 +47,7 @@ void StageController::update(){
 		case(GameStage::Exit):
 		break;
 	}	
+	UI::drawTop();
 }
 void StageController::beginBattle(){
 	EventSystem::Get().broadcastEvent(Occasion::OnBattleStart,*player);

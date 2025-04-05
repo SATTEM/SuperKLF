@@ -31,6 +31,9 @@ public:
 	std::string resizeTexture(const std::string path,const int width,const int height);
 	const Texture2D& loadTexture(const std::string path);
 	std::unordered_map<std::string, Texture2D>& getTextures(){return textures;}
+	const Texture2D resizeAndGet(const std::string& path,const Vector2& size){
+		return textures[resizeTexture(path,size.x,size.y)];
+	}
 	const Font& getFont(const std::string&);
 	void unloadTexture(const std::string path);
 	void cleanUp();

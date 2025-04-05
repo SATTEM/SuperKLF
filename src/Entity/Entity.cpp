@@ -8,11 +8,14 @@
 extern "C"{
 	#include "raylib.h"
 }
-
+#include "UI/UIUtility.h"
 void updateBulletPool(std::vector<std::unique_ptr<Bullet>>& pool,const float deltaTime,Entity& shooter);
 void tryFire(Entity& aEntity,const float deltaTime);
 void updateCollision(std::vector<std::unique_ptr<Bullet>>& pool,const float deltaTime,Entity& shooter);
 bool triggerHPThreshold(const int hp,const int maxHP);
+
+
+
 Entity::Entity(const std::string texPath,const Vector2& pos,const int hp,const float interval,const int MAXenergy,const int rise,const std::vector<Bullet>& pattern)
 		:position(pos),maxHP(hp),attackInterval(interval),
 		 attackTimer(0),energy(0),maxEnergy(MAXenergy),energyRise(rise),
@@ -54,6 +57,10 @@ void Entity::addRelic(std::shared_ptr<RelicEffect> relic){
 	relics.push_back(std::move(relic));
 	EventSystem::Get().bindRelicAndEvent(relics.back());
 }
+void Entity::removeRelic(const int i){
+	EventSystem::Get().unbindRelicAndEvent(relics[i],relics[i]->getOccasion());
+	relics.erase(relics.begin()+i);
+}
 void Entity::takeDamage(const int damage){
 	currentHP=std::max(0,currentHP-damage);
 	if(triggerHPThreshold(currentHP, maxHP)){
@@ -73,15 +80,40 @@ bool triggerHPThreshold(const int hp,const int maxHP){
 	return false;
 }
 /*--------------------------------------------------*/
+Player::Player(const std::string texPath,const Vector2& pos,const int hp=100
+	,const float interval=1,const int MAXenergy=100,const int rise=10)
+:Entity(texPath,pos,hp,interval,MAXenergy,rise){}
+
 void Player::Update(const float deltaTime){
 	tryFire(*this, deltaTime);
 	updateBulletPool(bulletPool, deltaTime,*this);
 	Draw();
 }
+
+void Player::addRelic(std::shared_ptr<RelicEffect> relic){
+	Entity::addRelic(relic);
+	auto pos=UI::countRelicDisplayPos(relicDisplays.size());
+	TextureDetailedDisplay tdd(
+		relic->getIcon(),
+		relic->getDescription(),
+		UI::countRelicDisplayPos(relicDisplays.size()),
+		UI::RELIC_DISPLAY_MAX_LENGTH);
+	relicDisplays.push_back(tdd);
+}
+void Player::removeRelic(const int i){
+	Entity::removeRelic(i);
+	relicDisplays.erase(relicDisplays.begin()+i);
+	for(int j=0;j<relicDisplays.size()-i;j++){
+		relicDisplays[i+j].setPosition(UI::countRelicDisplayPos(i+j));
+	}
+}
 void Player::Draw() const {
 	DrawTextureV(texture,position,WHITE);
 	drawHPandEnergy();
 	DrawRectangleLinesEx(boxCollider,5,RED);
+	for(const auto& rd:relicDisplays){
+		rd.Draw();
+	}
 }
 void Player::drawHPandEnergy() const{
 	DrawRectangleLines(0, GetScreenHeight()-40, int(GetScreenWidth()/2), 40, BLACK);
