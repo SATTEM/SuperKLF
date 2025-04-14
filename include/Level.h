@@ -6,8 +6,10 @@
 #include <fstream>
 
 class Level{
+private:
+    int id=0;
 public:
-    Level(const nlohmann::json& json);
+    Level(const nlohmann::json&);
     ~Level()=default;
 };
 

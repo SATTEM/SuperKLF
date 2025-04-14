@@ -29,6 +29,7 @@ const bool Check::isJsonValid(const nlohmann::json& j,const std::list<std::strin
 	bool valid=true;
 	for(const auto& i:items){
 		if(!j.contains(i)){
+			TraceLog(LOG_ERROR,"bad json: item [%s] is not found",i.c_str());
 			valid=false;
 		}
 	}

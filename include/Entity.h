@@ -28,6 +28,7 @@ protected:
 	std::vector<std::unique_ptr<Bullet>> bulletPool;
 	std::vector<std::shared_ptr<RelicEffect>> relics;
 public:
+	Entity()=default;
 	explicit Entity(const std::string texPath,const Vector2& pos,const int hp=100
 	,const float interval=1,const int MAXenergy=100,const int rise=10
 	,const std::vector<Bullet>& pattern={});
@@ -90,6 +91,7 @@ private:
 
 class Enemy:public Entity{
 public:
+	Enemy()=default;
 	Enemy(const std::string texPath,const Vector2& pos,const int hp=100
 	,const float interval=1,const int MAXenergy=100,const int rise=10)
 	:Entity(texPath,pos,hp,interval,MAXenergy,rise){}

@@ -1,0 +1,19 @@
+{
+    "levels":[
+        {
+            "id":0,
+            "image":"",
+            "HP":100,
+            "bullets":["",""],
+            "relic_id":["",""],
+            "max_energy":100,
+            "energy_rise":5,
+            "attack_interval":1,
+            "blast":""
+        },{}
+    ],
+    "shop":{},
+    "events":[
+
+    ]
+}
