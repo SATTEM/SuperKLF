@@ -32,7 +32,7 @@ public:
 	explicit Entity(const std::string texPath,const Vector2& pos,const int hp=100
 	,const float interval=1,const int MAXenergy=100,const int rise=10
 	,const std::vector<Bullet>& pattern={});
-
+	Entity(const Entity&);
 	~Entity()=default;
 	virtual void Update(const float deltaTime)=0;
 	void fire(Vector2 pos={0,0});
@@ -46,10 +46,10 @@ public:
 	virtual void addRelic(std::shared_ptr<RelicEffect> relic);
 	virtual void removeRelic(const int);
 	void addBullet(Bullet aBullet){bulletPattern.push_back(std::move(aBullet));}
+	void addBulletByID(const std::string& id){this->addBullet(BULLET::getBullet(id)->copy());}
 	void removeBullet(const int index){bulletPattern.erase(bulletPattern.begin()+index);}
 	void setBlast(Blast aBlast){blast=std::move(aBlast);}
-	void setOpponent(Entity& opp){opponent=&opp;}
-
+	void setOpponent(Entity& opp){opponent=&opp;updateBulletDirections();}
 	float& getAttackTimer(){return attackTimer;}
 	float& getAttackInterVale(){return attackInterval;}
 	Entity& getOpponent(){return *opponent;}
@@ -63,6 +63,7 @@ private:
 	virtual void Draw() const =0;
 	virtual void drawHPandEnergy() const=0;
 	void resetEnergy(){energy=0;}
+	void updateBulletDirections();
 };
 
 class Player:public Entity{
@@ -71,6 +72,8 @@ private:
 	std::vector<TextureDetailedDisplay> relicDisplays;
 public:
 	Player(const std::string texPath,const Vector2& pos,const int hp,const float interval,const int MAXenergy,const int rise);
+	Player(const Player& other):Entity(other){}
+	~Player()=default;
 	void Update(const float deltaTime) override;
 	void setAttackInterval(const float rate){attackInterval*=rate;}
 	void addRelic(std::shared_ptr<RelicEffect> relic) override;
@@ -92,9 +95,11 @@ private:
 class Enemy:public Entity{
 public:
 	Enemy()=default;
+	~Enemy()=default;
 	Enemy(const std::string texPath,const Vector2& pos,const int hp=100
 	,const float interval=1,const int MAXenergy=100,const int rise=10)
 	:Entity(texPath,pos,hp,interval,MAXenergy,rise){}
+	Enemy(const Enemy& other):Entity(other){}
 	void Update(const float deltaTime) override;
 private:
 	void Draw() const override;

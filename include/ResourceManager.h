@@ -36,6 +36,7 @@ public:
 	}
 	const Font& getFont(const std::string&);
 	void unloadTexture(const std::string path);
+	void frameClean();
 	void cleanUp();
 	void cleanFont();
 };

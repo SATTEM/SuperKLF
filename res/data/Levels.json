@@ -1,18 +1,19 @@
 {
-    "levels":[
+    "battles":[
         {
-            "id":0,
-            "image":"",
+            "id":"Battle0",
+            "image":"enemy.png",
             "HP":100,
-            "bullets":["",""],
-            "relic_id":["",""],
+            "bullets":["Bullet"],
+            "relic_id":["double_shoot_relic"],
             "max_energy":100,
             "energy_rise":5,
             "attack_interval":1,
-            "blast":""
-        },{}
+            "blast":"Blast",
+            "blast_image":"fallback.png",
+            "name":"bot"
+        }
     ],
-    "shop":{},
     "events":[
 
     ]

@@ -1,7 +1,12 @@
 目前：
-构建关卡系统:一个关卡等于一个boss
+构建关卡系统:一个关卡等于boss or shop or event 
 {
+->完成Entity三类的复制构造函数
+-->完成level::update()
+-->LevelManager::initialize()加载关卡
 ->从levels.json读取数据，创建并绑定boss
+->完成level advance时的关卡选择（终点都是boss level）
+[修改主逻辑，让level通过StageController来管理各种循环，main只负责管理现在的关卡]
 }
 构建货币系统
 完成存档和设置功能

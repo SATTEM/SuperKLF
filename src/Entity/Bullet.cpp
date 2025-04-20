@@ -21,8 +21,8 @@ Bullet::Bullet(const std::string texPath,const Vector2& vel,const Vector2& pos,c
 	texture=ResourceManager::Get().loadTexture(texturePath);
 	countColliderRadius();
 	effects.push_back(std::make_shared<GiveDamage>(GiveDamage(damage)));
-	if(idToBullet.find("Bullet")!=idToBullet.end()){
-		idToBullet.emplace("Bullet",*this);
+	if(BULLET::IDtoBullet.find("Bullet")==BULLET::IDtoBullet.end()){
+		BULLET::IDtoBullet.insert(std::make_pair(std::string("Bullet"),std::make_unique<Bullet>(*this)));
 	}
 }
 void Bullet::countColliderRadius(const Vector2 size){
@@ -39,7 +39,8 @@ Bullet::Bullet(const Bullet& proto,const Vector2& begin)
 std::unique_ptr<Bullet> Bullet::shoot(const Vector2& begin){
 	if(active==false){
 		//子弹原型时（只有原型会调用这个函数）
-		return std::unique_ptr<Bullet>(new Bullet(*this,begin));
+		Vector2 countedPos={begin.x-drawScale*texture.width/2.f,begin.y};
+		return std::unique_ptr<Bullet>(new Bullet(*this,countedPos));
 	}else{
 		return nullptr;
 	}
@@ -86,6 +87,15 @@ void Bullet::DrawAsPattern(const Vector2& pos,float scale) const{
 		DrawTextureEx(texture,pos,0,scale,WHITE);
 	}
 }
+
+Blast::Blast(const std::string texPath,const Vector2& vel,const Vector2& pos,const int dmg,const bool act):Bullet(texPath,vel,pos,dmg,act){
+	setDrawScale(BULLET::BLAST_DRAWSCALE);
+	countColliderRadius(BULLET::BULLET_SIZE);
+	if(BULLET::IDtoBlast.find("BLAST")==BULLET::IDtoBlast.end()){
+		BULLET::IDtoBlast.insert(std::make_pair(std::string("Blast"),std::make_unique<Blast>(*this)));
+	}
+}
+
 const bool isOutOfScreen(const Vector2& pos){
 	if(pos.x>GetScreenWidth()||pos.x<0){
 		return true;
@@ -94,4 +104,19 @@ const bool isOutOfScreen(const Vector2& pos){
 		return true;
 	}
 	return false;
+}
+
+std::unique_ptr<Bullet> BULLET::getBullet(const std::string &id){
+	if(IDtoBullet.find(id)==IDtoBullet.end()){
+		TraceLog(LOG_WARNING, "Bullet not found at %s",id.c_str());
+		return std::make_unique<Bullet>(*IDtoBullet["Bullet"]);
+	}
+	return std::make_unique<Bullet>(*IDtoBullet[id]);
+}
+std::unique_ptr<Blast> BULLET::getBlast(const std::string& id){
+	if(IDtoBlast.find(id)==IDtoBlast.end()){
+		TraceLog(LOG_WARNING, "Blast no found at %s",id.c_str());
+		return std::make_unique<Blast>(*IDtoBlast["Blast"]);
+	}
+	return std::make_unique<Blast>(*IDtoBlast[id]);
 }

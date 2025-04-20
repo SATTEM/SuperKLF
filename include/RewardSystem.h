@@ -5,10 +5,6 @@
 #include <string>
 #include "Effect/InstantEffect.h"
 #include "Entity.h"
-extern "C"{
-	#include "raylib.h"
-}
-class Entity;
 class Reward{
 protected:
 	std::wstring name,description;

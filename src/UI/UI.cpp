@@ -6,13 +6,11 @@
 #include "RewardSystem.h"
 #include <string>
 #include <random>
-#include <sys/select.h>
-#include "UI/UIUtility.h"
 extern "C"{
 	#include "raylib.h"
 }
 
-MainMenuUI::MainMenuUI(){
+MainMenuUI::MainMenuUI():BaseUI(){
 	const int screenHeight=GetScreenHeight();
 	const int screenWidth=GetScreenWidth();
 	startButton={
@@ -75,7 +73,7 @@ void DefeatUI::Draw() const{
 	exitButton.Draw();
 }
 
-DefeatUI::DefeatUI(){
+DefeatUI::DefeatUI():BaseUI(){
 	const int screenHeight=GetScreenHeight();
 	const int screenWidth=GetScreenWidth();
 	restartButton={
@@ -83,22 +81,22 @@ DefeatUI::DefeatUI(){
 		screenHeight*0.6f,
 		UI::BASIC_BUTTON_WIDTH,
 		UI::BASIC_BUTTON_HEIGHT},
-	L"[Space]Restart",ORANGE};
+	L"[空格]主菜单",ORANGE};
 	exitButton={{
 		screenWidth/2.0f,
 		screenHeight*0.75f,
 		UI::BASIC_BUTTON_WIDTH,
 		UI::BASIC_BUTTON_HEIGHT},
-		L"Quit",ORANGE};
+		L"离开游戏",ORANGE};
 }
 const bool DefeatUI::isExit()const{
 	return exitButton.isPressed();
 }
 const bool DefeatUI::isRestart()const{
-	return restartButton.isPressed();
+	return restartButton.isPressed()||IsKeyPressed(KEY_SPACE);
 }
 
-VictoryUI::VictoryUI(){
+VictoryUI::VictoryUI():BaseUI(){
 	const int screenHeight=GetScreenHeight();
 	const int screenWidth=GetScreenWidth();
 	refreshBtn={{screenWidth*0.8f,
@@ -171,7 +169,7 @@ void VictoryUI::Draw() const{
 	refreshBtn.Draw();
 }
 
-BattleUI::BattleUI():bulletPattern{Rectangle{0,GetScreenHeight()*0.34f,float(UI::BULLET_DISPLAY_WIDTH),float(UI::BULLET_DISPLAY_HEIGHT)}}
+BattleUI::BattleUI():BaseUI(),bulletPattern{Rectangle{0,GetScreenHeight()*0.34f,float(UI::BULLET_DISPLAY_WIDTH),float(UI::BULLET_DISPLAY_HEIGHT)}}
 {}
 
 void BattleUI::Draw() const{

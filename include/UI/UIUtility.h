@@ -30,6 +30,9 @@ namespace UI {
 	const float RELIC_DISPLAY_PADDING=3.f;
 	const float RELIC_DISPLAY_OFFSET=20.f;
 	const int RELIC_DISPLAY_MAX_LENGTH=4;
+	//Entity
+	static Vector2 DEFAULT_ENEMY_POSITION={640,100};
+	static Vector2 DEFAULT_PLAYER_POSTION={640,350};
 }
 namespace UI{
 	const float countTextPosX(const std::string& str,const int origin,const int fontSize,const Font& font);

@@ -17,18 +17,23 @@ bool triggerHPThreshold(const int hp,const int maxHP);
 
 
 Entity::Entity(const std::string texPath,const Vector2& pos,const int hp,const float interval,const int MAXenergy,const int rise,const std::vector<Bullet>& pattern)
-		:position(pos),maxHP(hp),attackInterval(interval),
-		 attackTimer(0),energy(0),maxEnergy(MAXenergy),energyRise(rise),
-		 bulletIndex(0),bulletPattern(pattern),currentHP(hp),
-		 bulletPool{}{
-			texture=ResourceManager::Get().loadTexture(texPath);
-			if(!IsTextureValid(texture)){
-				//当加载不成功时，使用临时图标
-				TraceLog(LOG_WARNING, "Using fallback texture for: %s",texPath.c_str());
-				texture=ResourceManager::Get().loadTexture(ASSETS_IMAGE_PATH "/fallback.png");
-			}
-			boxCollider={position.x,position.y,(float)texture.width,(float)texture.height};
-		 }
+:maxHP(hp),attackInterval(interval),currentHP(hp),
+energyRise(rise),maxEnergy(MAXenergy),bulletPattern(pattern),
+attackTimer(0),energy(0),bulletIndex(0),bulletPool{}{
+	texture=ResourceManager::Get().loadTexture(texPath);
+	if(!IsTextureValid(texture)){
+		//当加载不成功时，使用临时图标
+		TraceLog(LOG_WARNING, "Using fallback texture for: %s",texPath.c_str());
+		texture=ResourceManager::Get().loadTexture(ASSETS_IMAGE_PATH "/fallback.png");
+	}
+	position={pos.x-texture.width/2.f,pos.y};
+	boxCollider={position.x,position.y,(float)texture.width,(float)texture.height};
+}
+Entity::Entity(const Entity& other):
+	position(other.position),maxHP(other.maxHP),attackInterval(other.attackInterval),
+	maxEnergy(other.maxEnergy),energyRise(other.energyRise),bulletPattern(other.bulletPattern),
+	currentHP(other.maxHP),texture(other.texture),boxCollider(other.boxCollider),
+	attackTimer(0),energy(0),bulletIndex(0),bulletPool(){}
 void Entity::reset(){
 	currentHP=maxHP;
 	energy=0;
@@ -40,8 +45,8 @@ void Entity::fire(Vector2 pos){
 		return;
 	}
 	if(pos.x==0&&pos.y==0){
-		pos.x=position.x;
-		pos.y=position.y;
+		pos.x=position.x+boxCollider.width/2.f;
+		pos.y=position.y+boxCollider.width/2.f;
 	}
 	bulletPool.push_back(bulletPattern[bulletIndex].shoot(pos));
 	bulletIndex=(bulletIndex+1) % bulletPattern.size();
@@ -66,6 +71,40 @@ void Entity::takeDamage(const int damage){
 	if(triggerHPThreshold(currentHP, maxHP)){
 		EventSystem::Get().broadcastEvent(Occasion::OnHPThreshold, *this);
 	}
+}
+void Entity::updateBulletDirections(){
+	if(!opponent){return;}
+    // 计算从自己到对手的方向向量
+    Vector2 selfPos = Vector2{
+        position.x + boxCollider.width/2,
+        position.y + boxCollider.height/2
+    };
+    
+    Vector2 oppPos = Vector2{
+        opponent->position.x + opponent->boxCollider.width/2,
+        opponent->position.y + opponent->boxCollider.height/2
+    };
+    
+    // 计算方向向量
+    Vector2 direction = Vector2{
+        oppPos.x - selfPos.x,
+        oppPos.y - selfPos.y
+    };
+    
+    // 归一化方向向量
+    float length = sqrt(direction.x * direction.x + direction.y * direction.y);
+    if (length > 0) {
+        direction.x /= length;
+        direction.y /= length;
+    }
+    
+    // 更新所有子弹的方向
+    for (auto& bullet : bulletPattern) {
+        bullet.setVelocity(direction);
+    }
+    
+    // 更新大招效果的方向
+    blast.setVelocity(direction);	
 }
 bool triggerHPThreshold(const int hp,const int maxHP){
 	if(hp==maxHP*0.75){
@@ -127,6 +166,8 @@ void Enemy::Update(const float deltaTime){
 	updateBulletPool(bulletPool, deltaTime,*this);
 	Draw();
 }
+
+/*--------------------------------------------------*/
 void tryFire(Entity& shooter,const float deltaTime){
 	float& attackTimer=shooter.getAttackTimer();
 	float& attackInterval=shooter.getAttackInterVale();

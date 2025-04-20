@@ -103,7 +103,9 @@ void ResourceManager::cleanFont(){
 	usedFonts.clear();
 	needNewFont=false;
 }
-
+void ResourceManager::frameClean(){
+	cleanFont();
+}
 void ResourceManager::cleanUp(){
 	for(auto& [path,tex]:textures){
 		UnloadTexture(tex);
