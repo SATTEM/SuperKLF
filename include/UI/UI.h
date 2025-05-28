@@ -1,13 +1,16 @@
 #ifndef UI_H
 #define UI_H
-#include "Entity.h"
 #include "RewardSystem.h"
+#include <map>
+#include <raylib.h>
 #include <vector>
 #include "Button.h"
 #include "Information.h"
+class EventLevel;
+//UI功能:绘制、检测并返回状态
 class BaseUI{
 public:
-	~BaseUI()=default;
+	virtual ~BaseUI()=default;
 	BaseUI()=default;
 	BaseUI(const BaseUI&)=delete;
 	const BaseUI& operator=(const BaseUI&)=delete;
@@ -15,7 +18,6 @@ public:
 };
 class MainMenuUI:public BaseUI{
 private:
-	Button startButton,exitButton,continueButton;
 	MainMenuUI();
 	~MainMenuUI()=default;
 public:
@@ -26,11 +28,12 @@ public:
 	void Draw()const override final;
 	const bool isExit()const;
 	const bool isStart()const;
+private:
+	Button startButton,exitButton,continueButton;
 };
 
 class DefeatUI:public BaseUI{
 private:
-	Button restartButton,exitButton;
 	DefeatUI();
 	~DefeatUI()=default;
 public:
@@ -41,29 +44,30 @@ public:
 	const bool isRestart() const;
 	const bool isExit() const;
 	void Draw() const override;
+private:	
+	Button restartButton,exitButton;
 };
 class VictoryUI:public BaseUI{
 private:
 	VictoryUI();
 	~VictoryUI()=default;
-	ButtonWithExplain rewardBtn[3];
-	ButtonWithNumber refreshBtn;
-	std::vector<Reward> currentRewards;
+	const bool isRewardButtonPressed(int i) const;
+	const bool isRefreshButtonPressed() const;
 public:
 	static VictoryUI& Get(){
 		static VictoryUI instance;
 		return instance;
 	}
 	void Draw() const override;
-	void tryGenerateRewards(Player& player);
-	void chooseReward(const int i,Player& player);
-	const bool isRewardButtonPressed(int i) const;
-	const bool isRefreshButtonPressed() const;
+private:
+	ButtonWithExplain rewardBtn[3];
+	ButtonWithNumber refreshBtn;
+	std::vector<Reward> currentRewards;	
+	friend class VictoryLevel;
 };
 
 class BattleUI:public BaseUI{
 private:
-	BulletDisplay bulletPattern;
 	BattleUI();
 	~BattleUI()=default;
 public:
@@ -72,6 +76,31 @@ public:
 		return instance;
 	}
 	void Draw() const override;
+private:
+	BulletDisplay bulletPattern;	
+};
+class EventUI:public BaseUI{
+private:
+	EventUI();
+	~EventUI()=default;
+	void setup();
+	void Draw()const override;
+	const bool isOptionChoosen()const;
+	const int selectedOption()const;
+	void drawEventDetail()const;	
+public:
+	static EventUI& Get(){
+		static EventUI instance;
+		return instance;
+	}
+private:
+	//选项和按钮的映射
+	std::map<int, int> btnToOption;
+	Rectangle eventRect;
+	Detail context;
+	std::vector<ButtonWithExplain> optionButtons;
+	const EventLevel* currentEvent=nullptr;	
+	friend class EventLevel;
 };
 
 #endif

@@ -18,14 +18,14 @@ const bool Button::isPressed()const{
 }
 
 void Button::resetPosAndSize(){
-    const float maxTextWidth = rect.width * UI::WIDTH_RADIO;
-    const float maxTextHeight = rect.height * UI::HEIGHT_RADIO;
+    const float maxTextWidth = rect.width * UI::ButtonCFG::WIDTH_RADIO;
+    const float maxTextHeight = rect.height * UI::ButtonCFG::HEIGHT_RADIO;
 	std::wstring fullTextW=getFullText();
-	std::string fullText=UI::wstrToUTF(fullTextW);
+	std::string fullText=Trans::wstrToUTF(fullTextW);
 	const Font& font=ResourceManager::Get().getFont(fullText);
-    int low = UI::MIN_FONT_SIZE;
+    int low = UI::FontCFG::MIN_FONT_SIZE;
     int high = int(maxTextHeight);
-    int bestSize = UI::MIN_FONT_SIZE;
+    int bestSize = UI::FontCFG::MIN_FONT_SIZE;
     while (low <= high) {
         int mid = (low + high) / 2;
         Vector2 textSize = MeasureTextEx(font, fullText.c_str(), mid, 1);
@@ -79,7 +79,7 @@ void ButtonWithExplain::Draw() const{
 
 void ButtonWithNumber::Draw() const{
 	Color drawColor =color;
-	const Font& font=ResourceManager::Get().getFont(UI::wstrToUTF(text+addition));
+	const Font& font=ResourceManager::Get().getFont(Trans::wstrToUTF(text+addition));
 	if(available){
 		if(isPressed()){
 			drawColor=ColorBrightness(color, -0.3f);

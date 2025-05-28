@@ -1,14 +1,14 @@
 #include "Effect/InstantEffect.h"
 #include "Effect/EffectManager.h"
+#include "EntityModifier.h"
 #include "Entity.h"
 #include <string>
-
-
+using EM=EntityModifier;
 SpeedBoost::SpeedBoost(const nlohmann::json& params):InstantEffect(){
 	rate=params["rate"].get<float>();
 }
 void SpeedBoost::onApply(Player& player)const{
-	player.setAttackInterval(rate);
+	EM::multiplyAttackInterval(player, rate);
 }
 
 HealthBoost::HealthBoost(const nlohmann::json& params):InstantEffect(){
@@ -21,9 +21,9 @@ HealthBoost::HealthBoost(const nlohmann::json& params):InstantEffect(){
 void HealthBoost::onApply(Player& player)const{
 	const int* intPtr=std::get_if<int>(&value);
 	if(intPtr!=nullptr){
-		player.MaxHealthBoost(*intPtr);
+		EM::addHP(player,*intPtr);
 	}else{
-		player.MaxHealthBoost(*(std::get_if<float>(&value)));
+		EM::multiplyHP(player,*(std::get_if<float>(&value)));
 	}
 }
 
@@ -36,7 +36,7 @@ void NewRelic::onApply(Player& player)const{
 		return;
 	}else{
 		if(EffectManager::Get().isRelicEffectLoaded(relic_id)){
-			player.addRelic(EffectManager::Get().getRelicEffect(relic_id));
+			EM::addRelic(player,EffectManager::Get().getRelicEffect(relic_id));
 		}else{
 			TraceLog(LOG_ERROR, "creating a new relic with unknown id: %s",relic_id.c_str());
 		}

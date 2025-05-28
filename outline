@@ -1,3 +1,50 @@
- Naming an Effect:
- id: example_effect
- name: ExampleEffect
+以下将写出各个配置文件的格式
+Effect:
+{
+	"id": "example_effect",
+	"params": {}
+}
+Levels:
+battleLevel:
+{
+	"id":"Battle0",
+	"image":"enemy.png",
+	"HP":100,
+	"bullets":["Bullet"],
+	"relic_id":["double_shoot_relic"],
+	"max_energy":100,
+	"energy_rise":5,
+	"attack_interval":1,
+	"blast":"Blast",
+	"blast_image":"fallback.png",
+	"name":"bot"
+}
+eventLevel:
+{
+	"id":"Event0",
+	"title":"Example Event",
+	"background":"example_background.png",
+	"text":"This is an example event.",
+	"options":[
+		{
+			"text":"Option 1",
+			"explain":"Choose this option to gain a reward.",
+			"condition":{
+				"has_relic":[],
+				"not_has_relic":[]
+			},
+			"outcome":["effect_id1", "effect_id2"]
+		}
+	]
+}
+
+Reward:
+{
+	"name":"example_reward",
+	"description":"This is an example reward.",
+	"icon_path":"./res/image/example_icon.png",
+	"effectID":"example_effect"
+}
+
+
+

@@ -1,19 +1,23 @@
 目前：
 构建关卡系统:一个关卡等于boss or shop or event 
 {
-->完成Entity三类的复制构造函数
+-->完成EventUI，实现UI配置setup()
+-->实现Event的进入和退出
 -->完成level::update()
--->LevelManager::initialize()加载关卡
-->从levels.json读取数据，创建并绑定boss
-->完成level advance时的关卡选择（终点都是boss level）
-[修改主逻辑，让level通过StageController来管理各种循环，main只负责管理现在的关卡]
+-->从levels.json读取数据，创建并绑定boss
+-->完成level advance时的关卡选择逻辑（判断是否要进入事件，否则进入battleLevel）
+-->完成EventUI各种细节
 }
-构建货币系统
-完成存档和设置功能
-想法：
+构建货币系统和商店系统
+完成存档和设置功能，各种默认值放到json
+
+更长期的计划：
+添加更多的Effect功能:在EntityModifier类添加静态方法
+
 调整UI{
 	Button背景支持图片，
 	背景绘制优化，
+	UI全面改造（buttonWithImage，drawBackground等）
 }
 添加音效
 添加json的检查，缺失元素时明确提示而不是崩溃

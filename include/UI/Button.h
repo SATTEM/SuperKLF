@@ -43,7 +43,7 @@ private:
 	const std::wstring getFullText()const override;
 public:
 	ButtonWithExplain()=default;
-	ButtonWithExplain(Rectangle r,std::wstring t,Color c,std::wstring e):Button(r,t,c),explain(e,c,WHITE,UI::EXPLAIN_LINE_MAX_CHAR){
+	ButtonWithExplain(Rectangle r,std::wstring t,Color c,std::wstring e):Button(r,t,c),explain(e,c,WHITE,UI::ButtonCFG::EXPLAIN_LINE_MAX_CHAR){
 		explain.setRectangle({rect.x,rect.y+rect.height,rect.width,rect.height*2.5f});
 	}
 	void setExplain(const std::wstring& str);

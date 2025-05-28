@@ -15,6 +15,23 @@
         }
     ],
     "events":[
+        {
+            "id":"Event0",
+            "title":"Example Event",
+            "background":"example_background.png",
+            "text":"This is an example event.",
+            "options":[
+                {
+                    "text":"Option 1",
+                    "explain":"Choose this option to gain a reward.",
+                    "condition":{
+                        "has_relic":[],
+                        "not_has_relic":[]
+                    },
+                    "outcome":["speed_boost"]
+                }
+            ]
+        }
 
     ]
 }

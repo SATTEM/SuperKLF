@@ -2,7 +2,8 @@
 extern "C" {
 	#include "raylib.h"
 }
-#include "Level.h"
+#include "Level/Level.h"
+#include "Level/LevelManager.h"
 #include <fstream>
 #include <memory>
 #include <string>
@@ -27,16 +28,17 @@ int main(int argc,char* argv[]){
 	InitWindow(WindowWidth,WindowHeight,"SuperKLF");
 	StageController& gameCTRL=StageController::Get();
 	LevelManager& levelManager=LevelManager::Get();
+	//后初始化，其中设置了player的数值
 	LateInit();
 	while(!shouldEnd()){
 		BeginDrawing();
 		ClearBackground(WHITE);
-		DrawFPS(0, 0);
 		Level* currentLevel=LevelManager::Get().getCurrentLevel();
 		if(currentLevel){
 			currentLevel->update();
 			UI::drawTop();
 		}
+		DrawFPS(0, 0);
 		EndDrawing();
 		ResourceManager::Get().frameClean();
 	}
@@ -77,8 +79,8 @@ void RegisterEffects(){
 void entityInit();
 
 void LateInit(){
-	UI::DEFAULT_ENEMY_POSITION={GetScreenWidth()/2.f,GetScreenHeight()*0.2f};
-	UI::DEFAULT_PLAYER_POSTION={GetScreenWidth()/2.f,GetScreenHeight()*0.7f};
+	UI::EntityCFG::DEFAULT_ENEMY_POSITION={GetScreenWidth()/2.f,GetScreenHeight()*0.2f};
+	UI::EntityCFG::DEFAULT_PLAYER_POSTION={GetScreenWidth()/2.f,GetScreenHeight()*0.7f};
 	entityInit();
 	LevelManager::Get().initialize();
 	SetTargetFPS(240);
@@ -86,7 +88,7 @@ void LateInit(){
 //后初始化的实现
 void entityInit(){
 	std::unique_ptr<Player> player;
-	player.reset(new Player( ASSETS_IMAGE_PATH"player.png",UI::DEFAULT_PLAYER_POSTION,10,1,100,10));
+	player.reset(new Player( ASSETS_IMAGE_PATH"player.png",UI::EntityCFG::DEFAULT_PLAYER_POSTION,DATA::PLAYER_HP,DATA::PLAYER_INTERVAL,DATA::PLAYER_ENERGY,DATA::PLAYER_RISE));
 	player->addBullet(Bullet( ASSETS_IMAGE_PATH"pen.png",playerVel));
 	player->setBlast(Blast( ASSETS_IMAGE_PATH"warning.png",playerVel));
 	StageController::Get().setPlayer(std::move(player));

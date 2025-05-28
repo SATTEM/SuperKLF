@@ -3,14 +3,14 @@
 #include "GameStage.h"
 #include "Tools.h"
 void BulletDisplay::Draw() const{
-	Vector2 nowPos={box.x+UI::BULLET_DISPLAY_OFFSET,box.y+UI::BULLET_DISPLAY_OFFSET};
+	Vector2 nowPos={box.x+UI::BulletCFG::BULLET_DISPLAY_OFFSET,box.y+UI::BulletCFG::BULLET_DISPLAY_OFFSET};
 	DrawRectangle(box.x,box.y,box.width,box.height,Fade(GRAY,0.4));
 	DrawRectangleLines(box.x, box.y, box.width, box.height, YELLOW);
 	for(auto& bullet:StageController::Get().getPlayerBulletPattern()){
 		bullet.DrawAsPattern(nowPos,bulletScale);
 		nowPos={nowPos.x+BULLET::BULLET_SIZE.x,nowPos.y};
 		if(nowPos.x>box.width){
-			nowPos.x=box.x+UI::BULLET_DISPLAY_OFFSET;
+			nowPos.x=box.x+UI::BulletCFG::BULLET_DISPLAY_OFFSET;
 			nowPos.y+=BULLET::BULLET_SIZE.y;
 		}
 	}
@@ -24,7 +24,6 @@ TextureDetailedDisplay::TextureDetailedDisplay(const Texture2D& tex,const std::w
 	rect={position.x,position.y,float(texture.width),float(texture.height)};
 	detail.setRectangle({position.x,position.y+texture.height,float(texture.width),float(texture.height)});
 	detail.setFontSize(fontSize);
-	detail.setLineLength(length);
 }
 
 void TextureDetailedDisplay::Draw()const{

@@ -23,7 +23,7 @@ ResourceManager::ResourceManager(){
 		UnloadFileText(defaultCharFile);
 		std::string defaultCharsInUTF8=converter.to_bytes(includedChars);
 		int* codepoints=LoadCodepoints(defaultCharsInUTF8.c_str(), &codepointCount);
-		font=LoadFontFromMemory(".otf", fontFile, fontFileLength, UI::FONT_LOAD_SIZE, codepoints, codepointCount);
+		font=LoadFontFromMemory(".otf", fontFile, fontFileLength, UI::FontCFG::FONT_LOAD_SIZE, codepoints, codepointCount);
 		UnloadCodepoints(codepoints);
 	}
 }
@@ -90,7 +90,7 @@ const Font& ResourceManager::loadWords(const std::string& str){
 			TraceLog(LOG_ERROR, "[RES] Failed to generate codepoints for font");
 		}
 		usedFonts.push_back(font);
-		font=LoadFontFromMemory(".otf", fontFile, fontFileLength, UI::FONT_LOAD_SIZE, codepoints, codepointCount);
+		font=LoadFontFromMemory(".otf", fontFile, fontFileLength, UI::FontCFG::FONT_LOAD_SIZE, codepoints, codepointCount);
 		UnloadCodepoints(codepoints);
 	}
 	return font;

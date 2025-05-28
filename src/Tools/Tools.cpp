@@ -1,5 +1,7 @@
 #include "Tools.h"
 #include <algorithm>
+#include "Entity.h"
+#include "Bullet.h"
 extern "C"{
 	#include <raylib.h>
 }
@@ -34,4 +36,13 @@ const bool Check::isJsonValid(const nlohmann::json& j,const std::list<std::strin
 		}
 	}
 	return valid;
+}
+namespace Trans{
+	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+}
+std::string Trans::wstrToUTF(const std::wstring & text){
+	return converter.to_bytes(text);
+} 
+std::wstring Trans::UTFTowstr(const std::string & text){
+	return converter.from_bytes(text);
 }

@@ -46,5 +46,4 @@ public:
 	void setRelicID(const std::string& id);
 	virtual ~NewRelic()=default;
 };
-
 #endif

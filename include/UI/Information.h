@@ -7,7 +7,7 @@ extern "C"{
 class BulletDisplay{
 private:
 	Rectangle box;
-	float bulletScale=UI::BULLET_DISPLAY_SCALE;
+	float bulletScale=UI::BulletCFG::BULLET_DISPLAY_SCALE;
 public:
 	BulletDisplay(const Rectangle& b):box(b){}
 	~BulletDisplay()=default;
@@ -21,10 +21,9 @@ private:
 	Detail detail;
 	int length;
 public:
-	TextureDetailedDisplay(const Texture2D&,const std::wstring&,const Vector2&,const int lineLength,const int fontSize=UI::EXPLAIN_FONTSIZE);
+	TextureDetailedDisplay(const Texture2D&,const std::wstring&,const Vector2&,const int lineLength,const int fontSize=UI::ButtonCFG::EXPLAIN_FONTSIZE);
 	~TextureDetailedDisplay()=default;
 	void setPosition(const Vector2 pos){position=pos;rect={pos.x,pos.y,float(texture.width),float(texture.height)};}
-	void setLineLength(const int len){length=len;detail.setLineLength(length);}
 	void Draw()const;
 
 };

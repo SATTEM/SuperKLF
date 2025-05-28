@@ -1,6 +1,7 @@
 #include "DataManager.h"
 #include "RewardSystem.h"
 #include "nlohmann/json.hpp"
+#include <algorithm>
 #include <fstream>
 #include <string>
 extern "C"{
@@ -8,8 +9,38 @@ extern "C"{
 }
 
 using json= nlohmann::json;
+void DataManager::reset(){
+	passedLevel=0;
+	rewardRefreshRate=1.f;
+	rewardRefreshBase=10;
+	refreshTimes=0;
+	eventOdds=DATA::BASIC_EVENT_ODDS;
+}
 const int DataManager::getCoinsEarned() const{
 	return DATA::BASIC_COINS_EARNED*DATA::BASIC_COINS_RATE*passedLevel;
+}
+void DataManager::setEventOdds(const char& op,const float val){
+	//op:'+' '-' '*' '/'
+	//'s' for set to
+	switch(op){
+		case('+'):
+		eventOdds+=val;
+		break;
+		case('-'):
+		eventOdds-=val;
+		break;
+		case('*'):
+		eventOdds*=val;
+		break;
+		case('/'):
+		if(val==0){eventOdds=1;}
+		else{eventOdds/=val;}
+		break;
+		case('s'):
+		eventOdds=val;
+		break;
+	}
+	eventOdds=std::clamp(eventOdds,0.f,1.f);
 }
 DataManager::DataManager(){
 	//用nlohmann json从data.json中读取存档信息等

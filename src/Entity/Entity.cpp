@@ -1,5 +1,6 @@
 #include "Entity.h"
 #include "Bullet.h"
+#include "DataManager.h"
 #include "Event/EventFWD.h"
 #include "ResourceManager.h"
 #include <algorithm>
@@ -121,7 +122,9 @@ bool triggerHPThreshold(const int hp,const int maxHP){
 /*--------------------------------------------------*/
 Player::Player(const std::string texPath,const Vector2& pos,const int hp=100
 	,const float interval=1,const int MAXenergy=100,const int rise=10)
-:Entity(texPath,pos,hp,interval,MAXenergy,rise){}
+:Entity(texPath,pos,hp,interval,MAXenergy,rise){
+	money=DATA::START_MONEY;
+}
 
 void Player::Update(const float deltaTime){
 	tryFire(*this, deltaTime);
@@ -136,15 +139,23 @@ void Player::addRelic(std::shared_ptr<RelicEffect> relic){
 		relic->getIcon(),
 		relic->getDescription(),
 		UI::countRelicDisplayPos(relicDisplays.size()),
-		UI::RELIC_DISPLAY_MAX_LENGTH);
+		UI::RelicCFG::RELIC_DISPLAY_MAX_LENGTH);
 	relicDisplays.push_back(tdd);
+	relicIDs.emplace(relic->getID());
 }
 void Player::removeRelic(const int i){
+	relicIDs.erase(relics[i]->getID());
 	Entity::removeRelic(i);
 	relicDisplays.erase(relicDisplays.begin()+i);
 	for(int j=0;j<relicDisplays.size()-i;j++){
 		relicDisplays[i+j].setPosition(UI::countRelicDisplayPos(i+j));
 	}
+}
+void Player::clear(){
+	reset();
+	bulletPattern.clear();
+	relicIDs.clear();
+	relicDisplays.clear();
 }
 void Player::Draw() const {
 	DrawTextureV(texture,position,WHITE);
@@ -170,7 +181,7 @@ void Enemy::Update(const float deltaTime){
 /*--------------------------------------------------*/
 void tryFire(Entity& shooter,const float deltaTime){
 	float& attackTimer=shooter.getAttackTimer();
-	float& attackInterval=shooter.getAttackInterVale();
+	float& attackInterval=shooter.getAttackInterVal();
 	attackTimer+=deltaTime;
 	if(shooter.getEnergy()==shooter.getMaxEnergy()){
 		shooter.fireBlast();

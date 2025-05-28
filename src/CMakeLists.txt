@@ -8,6 +8,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${HEADPATH})
 #依赖库，每次添加库组件都要在这里加上
 #注意，越基础的库越要在后面
 target_link_libraries(${PROJECT_NAME} PRIVATE 
+	LevelManager
 	Level
 	Entity
 	GameStage

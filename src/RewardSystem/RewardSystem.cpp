@@ -14,8 +14,8 @@ Reward::Reward(const nlohmann::json& reward){
 	if(!Check::isJsonValid(reward,{"name","description","effectID"})){
 		TraceLog(LOG_ERROR, "Reward json invalid!");
 	}
-	name=UI::UTFTowstr(reward["name"].get<std::string>());
-	description=UI::autoSplit(UI::UTFTowstr(reward["description"].get<std::string>()),UI::EXPLAIN_LINE_MAX_CHAR);
+	name=Trans::UTFTowstr(reward["name"].get<std::string>());
+	description=UI::autoSplit(Trans::UTFTowstr(reward["description"].get<std::string>()),UI::ButtonCFG::EXPLAIN_LINE_MAX_CHAR);
 	effect=EffectManager::Get().getInstantEffect(reward["effectID"].get<std::string>());
 	if(reward.contains("id")){
 		adjust(reward["id"].get<std::string>());
@@ -42,12 +42,12 @@ void Reward::toNewRelicReward(const std::string& id){
 		std::dynamic_pointer_cast<NewRelic>(effect)->setRelicID(relic_id);
 		relic_name=EffectManager::Get().getRelicEffect(relic_id)->getName();
 	}
-	description=UI::autoSplit(description+L"\n"+relic_name,UI::EXPLAIN_LINE_MAX_CHAR);
+	description=UI::autoSplit(description+L"\n"+relic_name,UI::ButtonCFG::EXPLAIN_LINE_MAX_CHAR);
 }
 
 void Reward::toNewBulletReward(const std::string& id){
-	std::wstring newBulletName=UI::UTFTowstr(id.substr(11));
-	description=UI::autoSplit(description+L"\n"+newBulletName,UI::EXPLAIN_LINE_MAX_CHAR);
+	std::wstring newBulletName=Trans::UTFTowstr(id.substr(11));
+	description=UI::autoSplit(description+L"\n"+newBulletName,UI::ButtonCFG::EXPLAIN_LINE_MAX_CHAR);
 }
 
 void Reward::apply(Player& player){

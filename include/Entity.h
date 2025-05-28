@@ -11,9 +11,8 @@ extern "C"{
 #include "Bullet.h"
 #include "Effect/RelicEffect.h"
 #include "UI/Information.h"
-namespace GameInit{
-	const int Start_Money=33;
-}
+//用于访问修改Player的接口
+class EntityModifier;
 class Entity{
 protected:
 	Vector2 position;
@@ -51,7 +50,7 @@ public:
 	void setBlast(Blast aBlast){blast=std::move(aBlast);}
 	void setOpponent(Entity& opp){opponent=&opp;updateBulletDirections();}
 	float& getAttackTimer(){return attackTimer;}
-	float& getAttackInterVale(){return attackInterval;}
+	float& getAttackInterVal(){return attackInterval;}
 	Entity& getOpponent(){return *opponent;}
 	const int getEnergy() const{return energy;}
 	const int getHP() const{return currentHP;}
@@ -64,32 +63,36 @@ private:
 	virtual void drawHPandEnergy() const=0;
 	void resetEnergy(){energy=0;}
 	void updateBulletDirections();
+
+	friend class EntityModifier;
 };
 
 class Player:public Entity{
 private:
-	int money=GameInit::Start_Money;
+	int money;
+	//显示激活遗物
 	std::vector<TextureDetailedDisplay> relicDisplays;
+	//激活的遗物的ID
+	std::unordered_set<std::string> relicIDs;
 public:
 	Player(const std::string texPath,const Vector2& pos,const int hp,const float interval,const int MAXenergy,const int rise);
 	Player(const Player& other):Entity(other){}
 	~Player()=default;
 	void Update(const float deltaTime) override;
-	void setAttackInterval(const float rate){attackInterval*=rate;}
-	void addRelic(std::shared_ptr<RelicEffect> relic) override;
-	void removeRelic(const int) override;
-	void addMoney(const int value){money+=value;}
-	const bool deductMoney(const int value){
-		if(money-value<0){return false;}
-		else{money-=value;return true;}
-	}
-	void MaxHealthBoost(const int val){maxHP+=val;}
-	void MaxHealthBoost(const float rate){maxHP*=rate;}
-
 	const int getMoney() const{return money;}
+	const bool hasRelic(const std::string& id)const{
+		return relicIDs.find(id) != relicIDs.end();
+	}
+	void clear();
 private:
 	void Draw() const override;
 	void drawHPandEnergy() const override;
+	void addRelic(std::shared_ptr<RelicEffect> relic) override;
+	void removeRelic(const int) override;
+
+	friend class EntityModifier;
+	friend class RelicEffect;
+	friend class VictoryLevel;
 };
 
 class Enemy:public Entity{
