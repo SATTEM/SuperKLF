@@ -11,12 +11,13 @@
 #include "Tools.h"
 
 Reward::Reward(const nlohmann::json& reward){
-	if(!Check::isJsonValid(reward,{"name","description","effectID"})){
+	if(!Check::isJsonValid(reward,{"name","description","effectID","cost"})){
 		TraceLog(LOG_ERROR, "Reward json invalid!");
 	}
 	name=Trans::UTFTowstr(reward["name"].get<std::string>());
 	description=UI::autoSplit(Trans::UTFTowstr(reward["description"].get<std::string>()),UI::ButtonCFG::EXPLAIN_LINE_MAX_CHAR);
 	effect=EffectManager::Get().getInstantEffect(reward["effectID"].get<std::string>());
+	cost=reward["cost"].get<int>();
 	if(reward.contains("id")){
 		adjust(reward["id"].get<std::string>());
 	}

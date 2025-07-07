@@ -8,6 +8,7 @@
 class Reward{
 protected:
 	std::wstring name,description;
+	int cost=0;
 	std::shared_ptr<InstantEffect> effect;
 	void toNewRelicReward(const std::string&);
 	void toNewBulletReward(const std::string&);
@@ -18,5 +19,6 @@ public:
 	void apply(Player& player);
 	const std::wstring& getDescription()const{return description;}
 	const std::wstring& getName()const{return name;}
+	const int& getCost()const{return cost;}
 };
 #endif

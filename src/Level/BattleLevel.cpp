@@ -1,7 +1,10 @@
 #include "Level/BattleLevel.h"
 #include "Event/EventSystem.h"
 #include "Effect/EffectManager.h"
-#include "UI/UI.h"
+#include "Level/Level.h"
+#include "UI/LevelUI/BattleUI.h"
+#include "DataManager.h"
+#include "EntityModifier.h"
 BattleLevel::BattleLevel(const nlohmann::json& json):Level(json){
     bool notValid=!Check::isJsonValid(json,
     {"id","image","HP","bullets","relic_id",
@@ -27,10 +30,14 @@ BattleLevel::BattleLevel(const nlohmann::json& json):Level(json){
     HP=json["HP"].get<int>();
 }
 void BattleLevel::onActivate(){
+    static Vector2 enemyPos={
+		GetScreenWidth()*UI::EntityCFG::DEFAULT_ENEMY_POSITION.x,
+		GetScreenHeight()*UI::EntityCFG::DEFAULT_ENEMY_POSITION.y
+	};
     Level::onActivate();
     std::unique_ptr<Enemy> tmp=std::make_unique<Enemy>(
-        texPath,UI::EntityCFG::DEFAULT_ENEMY_POSITION,
-        HP,attack_interval,max_energy,energy_rise
+        texPath,enemyPos,HP,attack_interval,
+        max_energy,energy_rise
     );
     for(const auto& bullet:bullets){
         tmp->addBulletByID(bullet);
@@ -66,6 +73,13 @@ void BattleLevel::update(){
     if(!player.isAlive()){
         requestLevelChange("Defeat");
     }else if(!enemy.isAlive()){
+        getMoneyReward();
         requestLevelChange("Victory");
     }
+}
+void BattleLevel::getMoneyReward()const{
+	//计算并给予奖励
+	DataManager& dm=DataManager::Get();
+	int coins=dm.getCoinsEarned();
+	EntityModifier::addMoney(ctrl.getPlayer(), coins);
 }

@@ -1,7 +1,9 @@
 #include "Level/LevelManager.h"
+#include "GameStage.h"
 #include "Level/Level.h"
 #include "Level/MainMenuLevel.h"
 #include "Level/DefeatLevel.h"
+#include "Level/ShopLevel.h"
 #include "Level/VictoryLevel.h"
 #include "Level/EventLevel.h"
 #include "Level/BattleLevel.h"
@@ -25,17 +27,34 @@ void LevelManager::initialize(){
     levels["MainMenu"]=std::make_unique<MainMenuLevel>();
     levels["Victory"]=std::make_unique<VictoryLevel>();
     levels["Defeat"]=std::make_unique<DefeatLevel>();
+    levels["Shop"]=std::make_unique<ShopLevel>();
     loadLevelFromJson();
     currentLevel=levels["MainMenu"].get();
     currentLevel->onActivate();
 }
 void LevelManager::toNextBattle(){
-    //检查有无事件（概率检查+是否刚从事件回来），有则切入事件，无则前往下一关
     if(shouldEnterEvent()){
+        //应该进入事件
         switchToLevel(generateEventID());
+    }else if(shouldEnterShop()){
+        //应该进入商店
+        switchToLevel("Shop");
     }else{
+        //应该进入战斗
         switchToLevel(generateBattleID());
     }
+}
+const bool LevelManager::shouldEnterShop()const{
+    if(dynamic_cast<ShopLevel*>(currentLevel)!=nullptr||dynamic_cast<EventLevel*>(currentLevel)!=nullptr){
+        //刚从商店或事件回来
+        return false;
+    }
+    //或不满足进入商店的条件
+    if(StageController::Get().getPlayer().getMoney()<DATA::SHOP_MONEY_LIMIT||DataManager::Get().getPassedLevel()==1){
+        return false;
+    }
+
+    return true;
 }
 const bool LevelManager::shouldEnterEvent()const{
     if(dynamic_cast<EventLevel*>(currentLevel)!=nullptr||DataManager::Get().getPassedLevel()==1){

@@ -2,7 +2,7 @@
 #include "Tools.h"
 #include "ResourceManager.h"
 #include "UI/UIUtility.h"
-Button::Button(Rectangle r, std::wstring t, Color c) {
+Button::Button(const Rectangle& r,const std::wstring& t,const Color& c) {
     rect = {r.x-r.width/2.f,r.y-r.height/2.f,r.width,r.height};
 	if(rect.x<0){rect.x=0;}
 	if(rect.y<0){rect.y=0;}
@@ -90,9 +90,7 @@ void ButtonWithNumber::Draw() const{
 		drawColor=DARKGRAY;
 	}
 	DrawRectangleRec(rect, drawColor);
-	BeginScissorMode(rect.x, rect.y, rect.width, rect.height);
 	UI::drawText(text+addition,textPos.x,textPos.y,fontSize,WHITE);
-	EndScissorMode();
 }
 
 void ButtonWithNumber::setAddition(const std::wstring& str){

@@ -1,5 +1,5 @@
 #include "Level/DefeatLevel.h"
-#include "UI/UI.h"
+#include "UI/LevelUI/DefeatUI.h"
 #include "Level/LevelManager.h"
 void DefeatLevel::update(){
     DefeatUI& ui=DefeatUI::Get();

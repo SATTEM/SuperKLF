@@ -21,7 +21,7 @@ public:
 		entity.currentHP=entity.maxHP;
 	}
 	static void addMoney(Player& player,const int val){
-		player.money+=val;
+		player.money=std::max(0,player.money+val);
 	}
 	static void addRelic(Entity& entity,const std::shared_ptr<RelicEffect> relic){
 		entity.addRelic(relic);

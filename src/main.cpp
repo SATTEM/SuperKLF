@@ -1,3 +1,4 @@
+#include "UI/UI.h"
 #include "UI/UIUtility.h"
 extern "C" {
 	#include "raylib.h"
@@ -79,8 +80,6 @@ void RegisterEffects(){
 void entityInit();
 
 void LateInit(){
-	UI::EntityCFG::DEFAULT_ENEMY_POSITION={GetScreenWidth()/2.f,GetScreenHeight()*0.2f};
-	UI::EntityCFG::DEFAULT_PLAYER_POSTION={GetScreenWidth()/2.f,GetScreenHeight()*0.7f};
 	entityInit();
 	LevelManager::Get().initialize();
 	SetTargetFPS(240);
@@ -88,7 +87,11 @@ void LateInit(){
 //后初始化的实现
 void entityInit(){
 	std::unique_ptr<Player> player;
-	player.reset(new Player( ASSETS_IMAGE_PATH"player.png",UI::EntityCFG::DEFAULT_PLAYER_POSTION,DATA::PLAYER_HP,DATA::PLAYER_INTERVAL,DATA::PLAYER_ENERGY,DATA::PLAYER_RISE));
+	Vector2 playerPos={
+		GetScreenWidth()*UI::EntityCFG::DEFAULT_PLAYER_POSTION.x,
+		GetScreenHeight()*UI::EntityCFG::DEFAULT_PLAYER_POSTION.y
+	};
+	player.reset(new Player( ASSETS_IMAGE_PATH"player.png",playerPos,DATA::PLAYER_HP,DATA::PLAYER_INTERVAL,DATA::PLAYER_ENERGY,DATA::PLAYER_RISE));
 	player->addBullet(Bullet( ASSETS_IMAGE_PATH"pen.png",playerVel));
 	player->setBlast(Blast( ASSETS_IMAGE_PATH"warning.png",playerVel));
 	StageController::Get().setPlayer(std::move(player));

@@ -43,7 +43,8 @@ Reward:
 	"name":"example_reward",
 	"description":"This is an example reward.",
 	"icon_path":"./res/image/example_icon.png",
-	"effectID":"example_effect"
+	"effectID":"example_effect",
+	"cost":50
 }
 
 

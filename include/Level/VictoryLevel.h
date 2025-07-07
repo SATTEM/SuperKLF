@@ -1,6 +1,8 @@
 #ifndef VICTORYLEVLE_H
 #define VICTORYLEVLE_H
 #include "Level.h"
+#include "RewardSystem.h"
+#include <vector>
 
 class VictoryLevel:public Level{
 private:
@@ -9,5 +11,7 @@ private:
 public:
     VictoryLevel():Level(){id="Victory";}
     void update()override final;
+private:
+    std::vector<Reward> currentRewards;
 };
 #endif

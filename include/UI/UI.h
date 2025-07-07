@@ -1,106 +1,52 @@
 #ifndef UI_H
 #define UI_H
-#include "RewardSystem.h"
-#include <map>
-#include <raylib.h>
-#include <vector>
-#include "Button.h"
-#include "Information.h"
-class EventLevel;
-//UI功能:绘制、检测并返回状态
-class BaseUI{
-public:
-	virtual ~BaseUI()=default;
-	BaseUI()=default;
-	BaseUI(const BaseUI&)=delete;
-	const BaseUI& operator=(const BaseUI&)=delete;
-	virtual void Draw()const =0;
-};
-class MainMenuUI:public BaseUI{
-private:
-	MainMenuUI();
-	~MainMenuUI()=default;
-public:
-	static MainMenuUI& Get(){
-		static MainMenuUI instance;
-		return instance;
+#include <nlohmann/json.hpp>
+#include <functional>
+extern "C"{
+	#include "raylib.h"
+}
+namespace UI {
+	namespace UIControl{
+		static std::vector<std::function<void()>> allDrawCalls;
 	}
-	void Draw()const override final;
-	const bool isExit()const;
-	const bool isStart()const;
-private:
-	Button startButton,exitButton,continueButton;
-};
-
-class DefeatUI:public BaseUI{
-private:
-	DefeatUI();
-	~DefeatUI()=default;
-public:
-	static DefeatUI& Get(){
-		static DefeatUI instance;
-		return instance;
+	namespace EventCFG{
+		const int EVENT_FONT_SIZE=25;	
+		const Rectangle EVENT_SCALE={0.04f,0.2f,0.92f,0.5f};
 	}
-	const bool isRestart() const;
-	const bool isExit() const;
-	void Draw() const override;
-private:	
-	Button restartButton,exitButton;
-};
-class VictoryUI:public BaseUI{
-private:
-	VictoryUI();
-	~VictoryUI()=default;
-	const bool isRewardButtonPressed(int i) const;
-	const bool isRefreshButtonPressed() const;
-public:
-	static VictoryUI& Get(){
-		static VictoryUI instance;
-		return instance;
+	namespace FontCFG{
+		const int MIN_FONT_SIZE=1;
+		const int FONTSIZE=40;
+		const int FONT_LOAD_SIZE=200;
 	}
-	void Draw() const override;
-private:
-	ButtonWithExplain rewardBtn[3];
-	ButtonWithNumber refreshBtn;
-	std::vector<Reward> currentRewards;	
-	friend class VictoryLevel;
-};
-
-class BattleUI:public BaseUI{
-private:
-	BattleUI();
-	~BattleUI()=default;
-public:
-	static BattleUI& Get(){
-		static BattleUI instance;
-		return instance;
+		
+	namespace BulletCFG{
+		const int BULLET_DISPLAY_OFFSET=2;	
+		const int BULLET_DISPLAY_HEIGHT=240;
+		const int BULLET_DISPLAY_WIDTH=120;	
+		const float BULLET_DISPLAY_SCALE=0.15;		
 	}
-	void Draw() const override;
-private:
-	BulletDisplay bulletPattern;	
-};
-class EventUI:public BaseUI{
-private:
-	EventUI();
-	~EventUI()=default;
-	void setup();
-	void Draw()const override;
-	const bool isOptionChoosen()const;
-	const int selectedOption()const;
-	void drawEventDetail()const;	
-public:
-	static EventUI& Get(){
-		static EventUI instance;
-		return instance;
+	namespace ButtonCFG{
+		const int BASIC_BUTTON_WIDTH = 200;
+		const int BASIC_BUTTON_HEIGHT = 50;	
+		const float WIDTH_RADIO=0.9f;
+		const float HEIGHT_RADIO=0.5f;	
+		const float EXPLAIN_HEIGHT_FACTOR=2.5f;
+		const int EXPLAIN_LINE_MAX_CHAR=26;	
+		const int EXPLAIN_FONTSIZE=20;
 	}
-private:
-	//选项和按钮的映射
-	std::map<int, int> btnToOption;
-	Rectangle eventRect;
-	Detail context;
-	std::vector<ButtonWithExplain> optionButtons;
-	const EventLevel* currentEvent=nullptr;	
-	friend class EventLevel;
-};
-
+	namespace RelicCFG{
+		const Vector2 RELIC_TEXTURE_SIZE={32,32};
+		const float RELIC_DISPLAY_PADDING=3.f;
+		const float RELIC_DISPLAY_OFFSET=20.f;	
+		const int RELIC_DISPLAY_MAX_LENGTH=4;
+	}
+	namespace EntityCFG{
+		const Vector2 DEFAULT_ENEMY_POSITION={0.5f,0.2f};
+		const Vector2 DEFAULT_PLAYER_POSTION={0.5f,0.7f};		
+	}
+	namespace ShopCFG{
+		const Rectangle GOODS_GRID_FACTOR={0.2f,0.45f,0.5f,0.3f};
+		const float GOODS_GAP_FACTOR=0.05f;
+	}
+}
 #endif

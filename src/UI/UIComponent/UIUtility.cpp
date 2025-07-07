@@ -1,4 +1,5 @@
 #include "UI/UIUtility.h"
+#include "UI/UI.h"
 #include "ResourceManager.h"
 #include <vector>
 #include <string>

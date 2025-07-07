@@ -3,19 +3,22 @@
     "name": "致命节奏",
     "description": "攻击间隔减少20%",
     "icon_path": "./res/image/attack_speed.png",
-    "effectID": "speed_boost"
+    "effectID": "speed_boost",
+    "cost":50
   },
   {
     "name": "跑操",
     "description": "锻炼身体(?):HP+50",
     "icon_path": "./res/image/health_boost.png",
-    "effectID": "health_boost"
+    "effectID": "health_boost",
+    "cost":50
   },
   {
     "name":"新遗物",
     "id":"new_relic",
     "description":"得到一个新遗物: ",
     "icon_path":"",
-    "effectID":"new_relic"
+    "effectID":"new_relic",
+    "cost":100
   }
 ]

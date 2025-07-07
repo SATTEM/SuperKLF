@@ -24,7 +24,7 @@ public:
 	ResourceManager(const ResourceManager&)=delete;
 	void operator=(const ResourceManager&)=delete;
 	static ResourceManager& Get(){
-		//利用C++11局部静态变量特性
+		//单例
 		static ResourceManager instance;
 		return instance;
 	}

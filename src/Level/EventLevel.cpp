@@ -1,6 +1,6 @@
 #include "Level/EventLevel.h"
 #include "Level/LevelManager.h"
-#include "UI/UI.h"
+#include "UI/LevelUI/EventUI.h"
 #include "Effect/EffectManager.h"
 #include <raylib.h>
 EventLevel::Option::Option(const nlohmann::json& json){

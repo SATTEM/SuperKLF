@@ -8,6 +8,7 @@ private:
     ~LevelManager()=default;
     void loadLevelFromJson();
     const bool shouldEnterEvent()const;
+    const bool shouldEnterShop()const;
     const std::string generateEventID()const;    
     const std::string generateBattleID()const;
 public:

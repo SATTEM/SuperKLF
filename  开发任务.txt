@@ -1,15 +1,6 @@
 目前：
-构建关卡系统:一个关卡等于boss or shop or event 
-{
--->完成EventUI，实现UI配置setup()
--->实现Event的进入和退出
--->完成level::update()
--->从levels.json读取数据，创建并绑定boss
--->完成level advance时的关卡选择逻辑（判断是否要进入事件，否则进入battleLevel）
--->完成EventUI各种细节
-}
-构建货币系统和商店系统
 完成存档和设置功能，各种默认值放到json
+难度曲线：BattleLevel根据新增的passRange抽取
 
 更长期的计划：
 添加更多的Effect功能:在EntityModifier类添加静态方法

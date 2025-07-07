@@ -92,7 +92,6 @@ private:
 
 	friend class EntityModifier;
 	friend class RelicEffect;
-	friend class VictoryLevel;
 };
 
 class Enemy:public Entity{

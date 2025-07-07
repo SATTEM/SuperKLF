@@ -1,4 +1,4 @@
-#include "UI/UIUtility.h"
+#include "UI/UI.h"
 #include <codecvt>
 #include <locale>
 #include <string>
@@ -28,6 +28,7 @@ ResourceManager::ResourceManager(){
 	}
 }
 const Texture2D& ResourceManager::loadTexture(const std::string path){
+	//加载一个纹理
 	if(textures.find(path)!=textures.end()){
 		return textures[path];
 	}

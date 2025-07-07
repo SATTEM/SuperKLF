@@ -7,10 +7,14 @@
 namespace DATA {
 	//游戏初始数值
 	const int BASIC_COINS_EARNED=100;
+	const int BASIC_MAX_REFRESH_COIN=100;
 	const float BASIC_COINS_RATE=0.15f;
 	const float BASIC_EVENT_ODDS=0.5f;
+	const int SKIP_MONEY=20;
+	const int SHOP_GOODS_SIZE=5;
+	const int SHOP_MONEY_LIMIT=100;
 	//Player相关数值
-	const int START_MONEY=30;
+	const int START_MONEY=9999999;
 	const int PLAYER_HP=100;
 	const float PLAYER_INTERVAL=0.5f;
 	const int PLAYER_ENERGY=100;
@@ -40,11 +44,12 @@ public:
 	void setEventOdds(const char&,const float);
 	void resetRefreshTimes(){refreshTimes=0;}
 	void reset();
-	const int getRefreshMoney() const{return refreshTimes*rewardRefreshBase*rewardRefreshRate;}
+	const int getRefreshMoney() const;
 	const int getRefreshTimes() const{return refreshTimes;}
 	const int getPassedLevel() const{return passedLevel;}
 	const int getCoinsEarned() const;
 	const float getEventOdds()const{return eventOdds;}
+	const int getShopGoodSize()const{return shopGoodSize;}
 	const Reward& getReward(const int i);
 	const int getRewardSize() const {return rewards.size();}
 private:
@@ -52,6 +57,7 @@ private:
 	float rewardRefreshRate=1.f;
 	int rewardRefreshBase=10;
 	int refreshTimes=0;
+	int shopGoodSize=DATA::SHOP_GOODS_SIZE;
 	std::vector<Reward> rewards;
 	float eventOdds=DATA::BASIC_EVENT_ODDS;	
 };

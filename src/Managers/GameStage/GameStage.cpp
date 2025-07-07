@@ -2,7 +2,7 @@
 #include "Entity.h"
 #include <memory>
 #include "GameStage.h"
-#include "UI/UI.h"
+#include "UI/LevelUI/DefeatUI.h"
 
 void drawDefeatScreen(const DefeatUI& ui);
 

@@ -55,7 +55,11 @@ DataManager::DataManager(){
 		}
 	}
 }
-
+const int DataManager::getRefreshMoney()const{
+	int num=refreshTimes*rewardRefreshBase*rewardRefreshRate;
+	if(num>=DATA::BASIC_MAX_REFRESH_COIN){num=DATA::BASIC_MAX_REFRESH_COIN;}
+	return num;
+}
 const Reward& DataManager::getReward(const int i){
 	return rewards.at(i);
 }

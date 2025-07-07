@@ -6,7 +6,7 @@ extern "C"{
 }
 #include "nlohmann/json.hpp"
 #include "Event/EventFWD.h"
-#include "UI/UIUtility.h"
+#include "UI/UI.h"
 #include "Tools.h"
 #include "ResourceManager.h"
 class Entity;

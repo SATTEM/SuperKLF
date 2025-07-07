@@ -10,6 +10,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${HEADPATH})
 target_link_libraries(${PROJECT_NAME} PRIVATE 
 	LevelManager
 	Level
+	LevelUI
 	Entity
 	GameStage
 	Data
