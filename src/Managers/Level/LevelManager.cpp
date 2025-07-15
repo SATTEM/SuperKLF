@@ -10,6 +10,7 @@
 #include "DataManager.h"
 #include <fstream>
 #include <random>
+#include <raylib.h>
 LevelManager::LevelManager(){
 }
 void LevelManager::switchToLevel(const std::string& id){
@@ -76,13 +77,38 @@ const std::string LevelManager::generateEventID()const{
     std::random_device rd;
     std::mt19937 engine(rd());
     std::uniform_int_distribution<int> dis(0,eventCount-1);
-    return "Event"+std::to_string(dis(engine));
+    std::string eventID="Event"+std::to_string(dis(engine));
+    EventLevel* event=dynamic_cast<EventLevel*>(levels.at(eventID).get());
+    int seekCount=0;//最多寻找次数
+    while(event->getRange()>DataManager::Get().getPassedLevel()&&seekCount<50){
+        //若未达到出现关卡
+        seekCount++;
+        eventID="Battle"+std::to_string(dis(engine));
+        event=dynamic_cast<EventLevel*>(levels.at(eventID).get());
+    }
+    if(seekCount>=50){
+        TraceLog(LOG_ERROR, "Not find usable event level after 50 tries");
+    }
+    return eventID;
 }
 const std::string LevelManager::generateBattleID()const{
+    //获得下一场战斗的ID
     std::random_device rd;
     std::mt19937 engine(rd());
     std::uniform_int_distribution<int> dis(0,battleCount-1);
-    return "Battle"+std::to_string(dis(engine));
+    std::string battleID="Battle"+std::to_string(dis(engine));
+    BattleLevel* battle=dynamic_cast<BattleLevel*>(levels.at(battleID).get());
+    int seekCount=0;//最多寻找次数
+    while(battle->getRange()>DataManager::Get().getPassedLevel()&&seekCount<50){
+        //若未达到出现关卡
+        seekCount++;
+        battleID="Battle"+std::to_string(dis(engine));
+        battle=dynamic_cast<BattleLevel*>(levels.at(battleID).get());
+    }
+    if(seekCount>=50){
+        TraceLog(LOG_ERROR, "Not find usable battle level after 50 tries");
+    }
+    return battleID;
 }
 void LevelManager::loadLevelFromJson(){
     if(FileExists(DATA::LEVEL_CONFIG_PATH.c_str())){

@@ -14,6 +14,7 @@ private:
 	void adjustButtonPosition();
 	void setButtonAvailability();
 	void attachGoodsCost();
+	void disableGoods(const int i);
 public:
 	static ShopUI& Get(){
 		static ShopUI instance;

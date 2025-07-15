@@ -15,16 +15,18 @@ public:
         void apply(Player& player)const;
     };
 private:
-    std::string background,text,title;
-    std::vector<Option> options;
     void setupUI()const;
 public:
     EventLevel(const nlohmann::json& json);
     ~EventLevel()=default;
+    const int getRange()const{return range;}
     void update()override final;
     void onActivate()override final;
     void onDeactivate()override final;
-
+private:
+    std::string background,text,title;
+    std::vector<Option> options;
+    int range=0;
     friend class EventUI;
 };
 #endif

@@ -79,8 +79,6 @@ void ShopUI::Draw()const{
 	DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK,0.5f));
 	UI::drawText("商店！购买你能买得起的东西吧!",
 		screenWidth*0.5f,screenHeight*0.2f,2*UI::FontCFG::FONTSIZE,GOLD);
-	//背景：左侧一个商人emoji，中间摆放货物
-	//未完成
 	DrawTextureV(shopKeeperTexture,{screenWidth*0.8f,screenHeight*0.45f},WHITE);
 	for(const auto& btn:goodsBtn){
 		btn.Draw();
@@ -97,4 +95,7 @@ const bool ShopUI::isSkipButtonPressed()const{
 }
 const bool ShopUI::isGoodButtonPressed(const int i)const{
 	return goodsBtn.at(i).isPressed();
+}
+void ShopUI::disableGoods(const int i){
+	goodsBtn.at(i).setAvailibility(false);
 }

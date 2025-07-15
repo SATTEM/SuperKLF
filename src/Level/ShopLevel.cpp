@@ -5,7 +5,6 @@
 #include "UI/Button.h"
 #include "UI/LevelUI/ShopUI.h"
 #include "UI/UI.h"
-#include <random>
 #include <raylib.h>
 void ShopLevel::onActivate(){
 	Level::onActivate();
@@ -27,7 +26,7 @@ void ShopLevel::update(){
 	for(size_t i=0;i<currentRewards.size();i++){
 		if(ui.isGoodButtonPressed(i)){
 			buyGoods(i);
-			LevelManager::Get().toNextBattle();
+			ui.disableGoods(i);
 		}
 	}
 	if(ui.isSkipButtonPressed()){
@@ -36,16 +35,13 @@ void ShopLevel::update(){
 }
 void ShopLevel::genGoods(){
 //生成商品并绑定到UI
-	std::random_device rd;
-	std::mt19937 gen;
-	std::uniform_int_distribution<int> dis(0,DataManager::Get().getRewardSize()-1);
 	ShopUI& ui=ShopUI::Get();
 	DataManager& data=DataManager::Get();
 	currentRewards.clear();
 	rewardsCost.clear();
 	ui.goodsBtn.clear();
 	for(int i=0;i<data.getShopGoodSize();i++){
-		currentRewards.push_back(data.getReward(dis(gen)));
+		currentRewards.push_back(data.getRandomReward());
 		rewardsCost.push_back(currentRewards[i].getCost());
 		ui.goodsBtn.push_back(GoodsButton({
 			0,0,

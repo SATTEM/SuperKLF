@@ -1,4 +1,4 @@
-以下将写出各个配置文件的格式
+//以下将写出各个配置文件的格式
 Effect:
 {
 	"id": "example_effect",
@@ -17,7 +17,8 @@ battleLevel:
 	"attack_interval":1,
 	"blast":"Blast",
 	"blast_image":"fallback.png",
-	"name":"bot"
+	"name":"bot",
+	"range":0//最小出现关卡，默认是0
 }
 eventLevel:
 {
@@ -35,7 +36,8 @@ eventLevel:
 			},
 			"outcome":["effect_id1", "effect_id2"]
 		}
-	]
+	],
+	"range":0//最小出现关卡，默认是0
 }
 
 Reward:
@@ -44,7 +46,8 @@ Reward:
 	"description":"This is an example reward.",
 	"icon_path":"./res/image/example_icon.png",
 	"effectID":"example_effect",
-	"cost":50
+	"cost":50,
+	"range":0//最小出现关卡，默认是0
 }
 
 

@@ -7,11 +7,13 @@ private:
     void getMoneyReward()const;
 public:
     BattleLevel(const nlohmann::json& json);
+    const int getRange()const{return range;}
     void update()override final;
     void onActivate()override final;
 private:
     std::string texPath,blast,name,blastImage;
     int max_energy,energy_rise,HP;
+    int range=0;
     float attack_interval=0;
     std::vector<std::string> bullets,relics;    
 };

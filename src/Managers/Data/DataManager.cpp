@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <fstream>
 #include <string>
+#include <random>
 extern "C"{
 	#include "raylib.h"
 }
@@ -59,6 +60,26 @@ const int DataManager::getRefreshMoney()const{
 	int num=refreshTimes*rewardRefreshBase*rewardRefreshRate;
 	if(num>=DATA::BASIC_MAX_REFRESH_COIN){num=DATA::BASIC_MAX_REFRESH_COIN;}
 	return num;
+}
+const Reward& DataManager::getRandomReward(bool isFilter){
+	//产生随机奖励，如果isFilter为真，则只产生符合range条件的奖励
+	static std::random_device rd;
+	static std::mt19937 gen;
+	static std::uniform_int_distribution<int> dis(0,getRewardSize()-1);
+	int index=dis(gen);
+	Reward& reward=rewards.at(index);
+	if(isFilter){
+		int seekCount=0;
+		while(reward.getRange()>passedLevel&&seekCount<50){
+			index=dis(gen);
+			reward=rewards.at(index);
+			seekCount++;
+		}
+		if(seekCount>=50){
+			TraceLog(LOG_ERROR, "Not find usable reward after 50 tries");
+		}
+	}
+	return reward;
 }
 const Reward& DataManager::getReward(const int i){
 	return rewards.at(i);

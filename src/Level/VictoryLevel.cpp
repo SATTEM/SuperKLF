@@ -3,7 +3,6 @@
 #include "UI/LevelUI/VictoryUI.h"
 #include "DataManager.h"
 #include "Level/LevelManager.h"
-#include <random>
 void VictoryLevel::update(){
     VictoryUI& ui=VictoryUI::Get();
     DataManager& data=DataManager::Get();
@@ -33,12 +32,9 @@ void VictoryLevel::tryGenerateRewards(Player& player){
 	if(success){
 		EntityModifier::addMoney(player, -DataManager::Get().getRefreshMoney());
 		TraceLog(LOG_INFO,"Generating rewards");
-		std::random_device rd;
-		std::mt19937 gen(rd());
-		std::uniform_int_distribution<> dis(0,DataManager::Get().getRewardSize()-1);
 		currentRewards.clear();
 		for(int i=0;i<3;i++){
-			currentRewards.push_back(DataManager::Get().getReward(dis(gen)));
+			currentRewards.push_back(DataManager::Get().getRandomReward(true));
 			ui.rewardBtn[i].setText(currentRewards[i].getName());
 			ui.rewardBtn[i].setExplain(currentRewards[i].getDescription());
 		}

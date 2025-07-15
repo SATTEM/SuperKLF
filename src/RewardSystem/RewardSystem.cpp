@@ -21,6 +21,9 @@ Reward::Reward(const nlohmann::json& reward){
 	if(reward.contains("id")){
 		adjust(reward["id"].get<std::string>());
 	}
+	if(reward.contains("range")){
+		range=reward["range"].get<int>();
+	}
 }
 
 void Reward::adjust(const std::string& id){

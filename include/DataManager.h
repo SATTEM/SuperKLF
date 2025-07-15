@@ -13,6 +13,13 @@ namespace DATA {
 	const int SKIP_MONEY=20;
 	const int SHOP_GOODS_SIZE=5;
 	const int SHOP_MONEY_LIMIT=100;
+	namespace EnemyCFG{
+		//Enemy相关数值
+		const float ENEMY_BOOST_1st=1.2;
+		const float ENEMY_BOOST_2nd=1.7;
+		const float ENEMY_BOOST_3rd=2.5;
+		const float ENEMY_BOOST_4th=4;		
+	}
 	//Player相关数值
 	const int START_MONEY=9999999;
 	const int PLAYER_HP=100;
@@ -51,6 +58,7 @@ public:
 	const float getEventOdds()const{return eventOdds;}
 	const int getShopGoodSize()const{return shopGoodSize;}
 	const Reward& getReward(const int i);
+	const Reward& getRandomReward(const bool isFilter=false);
 	const int getRewardSize() const {return rewards.size();}
 private:
 	int passedLevel=0;

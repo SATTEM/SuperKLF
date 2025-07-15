@@ -11,7 +11,8 @@
             "attack_interval":1,
             "blast":"Blast",
             "blast_image":"fallback.png",
-            "name":"bot"
+            "name":"bot",
+            "range":0
         }
     ],
     "events":[
@@ -28,7 +29,7 @@
                         "has_relic":[],
                         "not_has_relic":[]
                     },
-                    "outcome":["speed_boost"]
+                    "outcome":[" "]
                 }
             ]
         }
