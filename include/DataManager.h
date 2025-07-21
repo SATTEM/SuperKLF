@@ -60,6 +60,8 @@ public:
 	const Reward& getReward(const int i);
 	const Reward& getRandomReward(const bool isFilter=false);
 	const int getRewardSize() const {return rewards.size();}
+	const nlohmann::json dump()const;
+	void load(const nlohmann::json& json);
 private:
 	int passedLevel=0;
 	float rewardRefreshRate=1.f;

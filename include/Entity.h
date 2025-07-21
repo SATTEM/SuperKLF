@@ -14,18 +14,6 @@ extern "C"{
 //用于访问修改Player的接口
 class EntityModifier;
 class Entity{
-protected:
-	Vector2 position;
-	Rectangle boxCollider;
-	Texture2D texture;
-	float attackInterval,attackTimer;//unit:second
-	int maxHP,currentHP,energy,maxEnergy,energyRise;
-	Entity* opponent;
-	Blast blast;
-	std::vector<Bullet> bulletPattern;
-	std::size_t bulletIndex;
-	std::vector<std::unique_ptr<Bullet>> bulletPool;
-	std::vector<std::shared_ptr<RelicEffect>> relics;
 public:
 	Entity()=default;
 	explicit Entity(const std::string texPath,const Vector2& pos,const int hp=100
@@ -63,7 +51,18 @@ private:
 	virtual void drawHPandEnergy() const=0;
 	void resetEnergy(){energy=0;}
 	void updateBulletDirections();
-
+protected:
+	Vector2 position;
+	Rectangle boxCollider;
+	Texture2D texture;
+	float attackInterval,attackTimer;//unit:second
+	int maxHP,currentHP,energy,maxEnergy,energyRise;
+	Entity* opponent;
+	Blast blast;
+	std::vector<Bullet> bulletPattern;
+	std::size_t bulletIndex;
+	std::vector<std::unique_ptr<Bullet>> bulletPool;
+	std::vector<std::shared_ptr<RelicEffect>> relics;
 	friend class EntityModifier;
 };
 
@@ -77,6 +76,7 @@ private:
 public:
 	Player(const std::string texPath,const Vector2& pos,const int hp,const float interval,const int MAXenergy,const int rise);
 	Player(const Player& other):Entity(other){}
+	Player(const nlohmann::json& json,const Vector2& pos);
 	~Player()=default;
 	void Update(const float deltaTime) override;
 	const int getMoney() const{return money;}
@@ -84,6 +84,7 @@ public:
 		return relicIDs.find(id) != relicIDs.end();
 	}
 	void clear();
+	const nlohmann::json dump()const;
 private:
 	void Draw() const override;
 	void drawHPandEnergy() const override;

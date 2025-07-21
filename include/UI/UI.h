@@ -8,6 +8,11 @@ extern "C"{
 namespace UI {
 	namespace UIControl{
 		static std::vector<std::function<void()>> allDrawCalls;
+
+	}
+	namespace UICFG{
+		const int WindowWidth=1280;
+		const int WindowHeight=720;		
 	}
 	namespace EventCFG{
 		const int EVENT_FONT_SIZE=25;	

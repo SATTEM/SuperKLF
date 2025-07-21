@@ -10,6 +10,7 @@ public:
     const int getRange()const{return range;}
     void update()override final;
     void onActivate()override final;
+    void onDeactivate()override final;
 private:
     std::string texPath,blast,name,blastImage;
     int max_energy,energy_rise,HP;

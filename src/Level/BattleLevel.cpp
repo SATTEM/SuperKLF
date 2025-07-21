@@ -68,6 +68,10 @@ void BattleLevel::onActivate(){
 	enemy.setOpponent(player);
 	player.setOpponent(enemy);
 }
+void BattleLevel::onDeactivate(){
+    Level::onDeactivate();
+    ctrl.captureBattle(id);
+}
 const int adjustHP(const int origin,const int level,const int range){
     /*敌人HP公式：
     range<=level<range+2: return origin

@@ -1,7 +1,3 @@
-目前：
-完成存档和设置功能，各种默认值放到json
-难度曲线：BattleLevel根据新增的passRange抽取
-
 更长期的计划：
 添加更多的Effect功能:在EntityModifier类添加静态方法
 

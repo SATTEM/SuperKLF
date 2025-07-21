@@ -108,7 +108,7 @@ const bool isOutOfScreen(const Vector2& pos){
 
 std::unique_ptr<Bullet> BULLET::getBullet(const std::string &id){
 	if(IDtoBullet.find(id)==IDtoBullet.end()){
-		TraceLog(LOG_WARNING, "Bullet not found at %s",id.c_str());
+		TraceLog(LOG_ERROR, "Bullet not found at %s",id.c_str());
 		return std::make_unique<Bullet>(*IDtoBullet["Bullet"]);
 	}
 	return std::make_unique<Bullet>(*IDtoBullet[id]);

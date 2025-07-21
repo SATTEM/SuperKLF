@@ -41,7 +41,8 @@ void LevelManager::toNextBattle(){
         //应该进入商店
         switchToLevel("Shop");
     }else{
-        //应该进入战斗
+        //应该进入战斗：先存档再战斗
+        StageController::Get().captureGame();
         switchToLevel(generateBattleID());
     }
 }

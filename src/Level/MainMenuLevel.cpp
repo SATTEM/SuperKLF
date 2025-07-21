@@ -1,4 +1,5 @@
 #include "Level/MainMenuLevel.h"
+#include "GameStage.h"
 #include "UI/LevelUI/MainMenuUI.h"
 #include "Level/LevelManager.h"
 void MainMenuLevel::update(){
@@ -9,5 +10,7 @@ void MainMenuLevel::update(){
     }else if(ui.isStart()){
         ctrl.resetGame();
         requestLevelChange("Victory");
+    }else if(ui.isLoad()){
+        ctrl.loadGame(DATA::FileCFG::savePath);
     }
 }

@@ -14,6 +14,7 @@ const bool Button::isHoovered()const{
 	return Collision::checkMouseTouch(rect);
 }
 const bool Button::isPressed()const{
+	if(available==false){return false;}
 	return  isHoovered()&&IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
 }
 

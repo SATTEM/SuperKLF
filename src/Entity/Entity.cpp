@@ -1,11 +1,14 @@
 #include "Entity.h"
 #include "Bullet.h"
 #include "DataManager.h"
+#include "Effect/EffectManager.h"
 #include "Event/EventFWD.h"
 #include "ResourceManager.h"
 #include <algorithm>
 #include <memory>
+#include <string>
 #include "Event/EventSystem.h"
+#include "UI/UI.h"
 extern "C"{
 	#include "raylib.h"
 }
@@ -80,30 +83,25 @@ void Entity::updateBulletDirections(){
         position.x + boxCollider.width/2,
         position.y + boxCollider.height/2
     };
-    
     Vector2 oppPos = Vector2{
         opponent->position.x + opponent->boxCollider.width/2,
         opponent->position.y + opponent->boxCollider.height/2
     };
-    
     // 计算方向向量
     Vector2 direction = Vector2{
         oppPos.x - selfPos.x,
         oppPos.y - selfPos.y
     };
-    
     // 归一化方向向量
     float length = sqrt(direction.x * direction.x + direction.y * direction.y);
     if (length > 0) {
         direction.x /= length;
         direction.y /= length;
     }
-    
     // 更新所有子弹的方向
     for (auto& bullet : bulletPattern) {
         bullet.setVelocity(direction);
     }
-    
     // 更新大招效果的方向
     blast.setVelocity(direction);	
 }
@@ -124,6 +122,25 @@ Player::Player(const std::string texPath,const Vector2& pos,const int hp=100
 	,const float interval=1,const int MAXenergy=100,const int rise=10)
 :Entity(texPath,pos,hp,interval,MAXenergy,rise){
 	money=DATA::START_MONEY;
+}
+Player::Player(const nlohmann::json& json,const Vector2& pos)
+    :Entity(ASSETS_IMAGE_PATH"player.png", pos, 
+             json["maxHP"].get<int>(), 
+             json["attackInterval"].get<float>(),
+             json["maxEnergy"].get<int>(), 
+             json["energyRise"].get<int>()) {
+    money = json["money"].get<int>();
+    // 加载子弹和大招
+    blast = *BULLET::getBlast(json["blast"]);
+    for(const auto& bullet : json["bulletPattern"]) {
+        addBulletByID(bullet);
+        bulletPattern.back().setProto(true);
+    }
+    // 加载遗物
+    EffectManager& em = EffectManager::Get();
+    for(const auto& relic : json["relics"]) {
+        addRelic(em.getRelicEffect(relic.get<std::string>()));
+    }
 }
 
 void Player::Update(const float deltaTime){
@@ -156,6 +173,26 @@ void Player::clear(){
 	bulletPattern.clear();
 	relicIDs.clear();
 	relicDisplays.clear();
+}
+const nlohmann::json Player::dump()const{
+	//打包存档数据
+	using json = nlohmann::json;
+	json data;
+	data["maxHP"]=maxHP;
+	data["maxEnergy"]=maxEnergy;
+	data["energyRise"]=energyRise;
+	data["money"]=money;
+	data["attackInterval"]=attackInterval;
+	data["blast"]=blast.getID();
+	data["relics"]=json::array();
+	for(const auto& relic:relicIDs){
+		data["relics"].push_back(relic);
+	}
+	data["bulletPattern"]=json::array();
+	for(const auto& bullet:bulletPattern){
+		data["bulletPattern"].push_back(bullet.getID());
+	}
+	return data;
 }
 void Player::Draw() const {
 	DrawTextureV(texture,position,WHITE);

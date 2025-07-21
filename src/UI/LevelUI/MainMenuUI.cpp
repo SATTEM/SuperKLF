@@ -1,5 +1,6 @@
 #include "UI/LevelUI/MainMenuUI.h"
 #include "UI/UIUtility.h"
+#include <raylib.h>
 MainMenuUI::MainMenuUI():BaseUI(){
 	const int screenHeight=GetScreenHeight();
 	const int screenWidth=GetScreenWidth();
@@ -30,10 +31,12 @@ MainMenuUI::MainMenuUI():BaseUI(){
 			UI::ButtonCFG::BASIC_BUTTON_WIDTH,
 			UI::ButtonCFG::BASIC_BUTTON_HEIGHT
 		},
-		L"继续(不可用)",
+		L"继续",
 		ORANGE
 	};
-	continueButton.setAvailibility(false);
+	if(!FileExists("save")){
+		continueButton.setAvailibility(false);
+	}
 }
 void MainMenuUI::Draw()const{
 	ClearBackground(WHITE);
@@ -48,4 +51,7 @@ const bool MainMenuUI::isExit()const{
 }
 const bool MainMenuUI::isStart()const{
 	return startButton.isPressed();
+}
+const bool MainMenuUI::isLoad()const{
+	return continueButton.isPressed();
 }

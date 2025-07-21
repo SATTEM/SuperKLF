@@ -84,3 +84,20 @@ const Reward& DataManager::getRandomReward(bool isFilter){
 const Reward& DataManager::getReward(const int i){
 	return rewards.at(i);
 }
+const nlohmann::json DataManager::dump()const{
+	using json=nlohmann::json;
+	json data;
+	data["passedLevel"]=passedLevel;
+	data["rewardRefreshRate"]=rewardRefreshRate;
+	data["rewardRefreshBase"]=rewardRefreshBase;
+	data["shopGoodSize"]=shopGoodSize;
+	data["eventOdds"]=eventOdds;
+	return data;
+}
+void DataManager::load(const nlohmann::json& json){
+	passedLevel=json["passedLevel"].get<int>();
+	rewardRefreshRate=json["rewardRefreshRate"].get<float>();
+	rewardRefreshBase=json["rewardRefreshBase"].get<float>();
+	shopGoodSize=json["shopGoodSize"].get<int>();
+	eventOdds=json["eventOdds"].get<float>();
+}

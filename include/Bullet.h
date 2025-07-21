@@ -29,27 +29,22 @@ namespace BULLET{
 //基础版本子弹，有子弹的基本功能，特效只有伤害
 class Bullet{
 protected:
-	Vector2 position;
-	Texture2D texture;
-	std::string texturePath;
-	Vector2 velocity;//速度倍率
-	float drawScale=0.1f;//子弹缩放倍率
-	int damage;
-	float colliderRadius;
-	bool active,isOnShoot=true,shouldRemove=false;
-	std::vector<std::shared_ptr<BulletEffect>> effects;
-	
+	Bullet(const Bullet& proto,const Vector2& begin);
+	void countColliderRadius(const Vector2 size=BULLET::BULLET_SIZE);
 public:
 	~Bullet()=default;
 	Bullet(const std::string texPath=ASSETS_IMAGE_PATH+std::string("pen.png"),const Vector2& vel={0,1},const Vector2& pos={0,0},const int dmg=BULLET::BASIC_DMG,const bool act=false);
-	Bullet copy()const{return *this;}
+	Bullet copy(){return *this;}
 	std::unique_ptr<Bullet> shoot(const Vector2& begin);
+	virtual const std::string getID()const{return "Bullet";}
 	void Update(const float deltaTime,Entity& shooter);
 	void addEffect(std::shared_ptr<BulletEffect> effect){effects.push_back(std::move(effect));}
 	void setDamage(const int dmg){damage=dmg;}
+	void setProto(const bool pro){active=!pro;}
 	void setDrawScale(const float val){drawScale=val;}
 	void setVelocity(const Vector2& v){velocity=v;}
 	const Vector2 getColliderCentre() const {return {position.x+int(texture.width*drawScale/2),position.y+int(texture.height*drawScale/2)};}
+	const Vector2& getVelocity()const{return velocity;}
 	const float getColliderRadius() const {return colliderRadius;}
 	const bool shouldBeRemoved() const{return shouldRemove;}
 	void DrawAsPattern(const Vector2& pos,float scale=0.f) const;
@@ -58,8 +53,15 @@ private:
 	void checkHit(Entity& shooter);
 	void tryTriggerEffects(Entity& shooter,const Occasion& timing);
 protected:
-	Bullet(const Bullet& proto,const Vector2& begin);
-	void countColliderRadius(const Vector2 size=BULLET::BULLET_SIZE);
+	Vector2 position;
+	Texture2D texture;
+	std::string texturePath;
+	Vector2 velocity={0,-1};//速度倍率，以玩家子弹为默认方向
+	float drawScale=0.1f;//子弹缩放倍率
+	int damage;
+	float colliderRadius;
+	bool active,isOnShoot=true,shouldRemove=false;
+	std::vector<std::shared_ptr<BulletEffect>> effects;
 };
 class Blast:public Bullet{
 
@@ -68,6 +70,7 @@ public:
 	Blast(const std::string texPath,const Vector2& vel={0,1},const Vector2& pos={0,0},const int dmg=10*BULLET::BASIC_DMG,const bool act=false);
 	Blast(const Blast& proto,const Vector2& begin):Bullet(*this,begin){}
 	void setImage(const std::string path){texture=ResourceManager::Get().loadTexture(path);}
+	virtual const std::string getID()const{return "Blast";}
 };
 
 namespace BULLET{

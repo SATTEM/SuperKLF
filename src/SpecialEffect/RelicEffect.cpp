@@ -4,5 +4,4 @@
 DoubleShootRelic::DoubleShootRelic(const nlohmann::json& params):RelicEffect(params){
 }
 void DoubleShootRelic::onTrigger(Entity& relatedEntity){
-	TraceLog(LOG_WARNING,"Triggering DoubleShootRelic(Not developed yet)");
 }

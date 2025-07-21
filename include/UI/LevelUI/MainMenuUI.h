@@ -14,6 +14,7 @@ public:
 	void Draw()const override final;
 	const bool isExit()const;
 	const bool isStart()const;
+	const bool isLoad()const;
 private:
 	Button startButton,exitButton,continueButton;
 };
