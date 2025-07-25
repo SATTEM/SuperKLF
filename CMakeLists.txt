@@ -1,12 +1,24 @@
 #根目录CMakeLists.txt
 cmake_minimum_required(VERSION 3.5.0)
 project(SuperKLF)
+if(CMAKE_CROSSCOMPILING AND CMAKE_SYSTEM_NAME STREQUAL "Windows")
+	message(STATUS "Cross-compiling for win")
+	set(WINDOWS TRUE)
+endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(SRC ${PROJECT_SOURCE_DIR}/src)
 set(LIBPATH ${PROJECT_SOURCE_DIR}/libs)
-set(GAMEPATH ${PROJECT_SOURCE_DIR}/bin)
 set(HEADPATH ${PROJECT_SOURCE_DIR}/include)
+#交叉编译设置
+if(WINDOWS)
+	set(RAYLIB_WINDOWS_PATH "${PROJECT_SOURCE_DIR}/windows")
+	include_directories(${RAYLIB_WINDOWS_PATH}/include)
+	link_directories(${RAYLIB_WINDOWS_PATH}/lib)
+	set(GAMEPATH ${PROJECT_SOURCE_DIR}/bin-win)
+else()
+	set(GAMEPATH ${PROJECT_SOURCE_DIR}/bin)
+endif()
 #输出clangd要读取的配置
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #可执行文件的输出路径

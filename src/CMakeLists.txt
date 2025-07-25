@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.5.0)
 project(SuperKLF_alpha)
 file(GLOB PROJECT_SOURCES CONFIGURE_DEPENDS ${SRC}/*.cpp)
-add_executable(${PROJECT_NAME})
+add_executable(${PROJECT_NAME} WIN32)
 target_sources(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${HEADPATH})
 #依赖库，每次添加库组件都要在这里加上
@@ -19,6 +19,14 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 	UIComponent
 	SpecialEffect
 	ResourceManager
-	Tools
-	raylib)
+	Tools)
+#链接运行库
+if(WINDOWS)
+#全静态链接，避免还要分发dll
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${RAYLIB_WINDOWS_PATH}/lib/libraylib.a
+        -static -static-libgcc -static-libstdc++
+        -lwinmm -lgdi32 -lopengl32)
+else()
+	target_link_libraries(${PROJECT_NAME} PRIVATE raylib)
+endif()
 target_link_directories(${PROJECT_NAME} PRIVATE ${LIBPATH})
