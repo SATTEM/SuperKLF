@@ -9,17 +9,9 @@ extern "C"{
 }
 class ResourceManager{
 private:
-	std::unordered_map<std::string, Texture2D> textures;
-	unsigned char* fontFile;
-	std::wstring includedChars;
-	std::unordered_set<wchar_t> charsSet;
-	Font font;
-	std::list<Font> usedFonts;
-	int fontFileLength;
-	bool needNewFont=false;
 	ResourceManager();
 	~ResourceManager()=default;
-	const Font& loadWords(const std::string&);
+	const Font& loadWords(const std::string&);	
 public:
 	ResourceManager(const ResourceManager&)=delete;
 	void operator=(const ResourceManager&)=delete;
@@ -39,6 +31,15 @@ public:
 	void frameClean();
 	void cleanUp();
 	void cleanFont();
+private:
+	std::unordered_map<std::string, Texture2D> textures;
+	unsigned char* fontFile;
+	std::wstring includedChars;
+	std::unordered_set<wchar_t> charsSet;
+	Font font;
+	std::list<Font> usedFonts;
+	int fontFileLength;
+	bool needNewFont=false;
 };
 
 #endif

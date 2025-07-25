@@ -50,5 +50,8 @@ Reward:
 	"range":0//最小出现关卡，默认是0
 }
 
+Save:
+{"currentLevel":"Battle0","data":{"eventOdds":0.5,"passedLevel":1,"rewardRefreshBase":10,"rewardRefreshRate":1.0,"shopGoodSize":5},"player":{"attackInterval":0.1,"blast":"Blast","bulletPattern":["Bullet"],"energyRise":1,"maxEnergy":1,"maxHP":1,"money":1,"relics":[]}}
+
 
 

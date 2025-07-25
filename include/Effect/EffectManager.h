@@ -14,8 +14,6 @@ class EffectManager{
 private:
 	EffectManager()=default;
 	~EffectManager()=default;
-	std::map<int,std::string> instantIDs;
-	std::map<int,std::string> relicIDs;
 public:
 	EffectManager(const EffectManager&)=delete;
 	void operator=(const EffectManager&)=delete;
@@ -36,12 +34,14 @@ public:
 	bool isRelicEffectLoaded(const std::string& id) const;
 	const std::map<int,std::string>& getInstantEffectMap()const{return instantIDs;}
 	const std::map<int,std::string>& getRelicEffectMap()const{return relicIDs;}
+private:
+	std::map<int,std::string> instantIDs;
+	std::map<int,std::string> relicIDs;	
 };
 class InstantEffectLoader{
 private:
 	InstantEffectLoader()=default;
 	~InstantEffectLoader()=default;
-	std::unordered_map<std::string, std::unique_ptr<InstantEffectFactory>> factories;
 public:
 	InstantEffectLoader(const InstantEffectLoader&)=delete;
 	void operator=(const InstantEffectLoader&)=delete;
@@ -55,13 +55,14 @@ public:
 	std::shared_ptr<InstantEffect> getEffect(const std::string&);
 	//检查是否存在某效果
 	bool isEffectLoaded(const std::string& id) const;
+private:
+	std::unordered_map<std::string, std::unique_ptr<InstantEffectFactory>> factories;	
 };
 //RelicEffect
 class RelicEffectLoader{
 private:
 	RelicEffectLoader()=default;
 	~RelicEffectLoader()=default;
-	std::unordered_map<std::string, std::shared_ptr<RelicEffectFactory>> factories;
 public:
 	RelicEffectLoader(const RelicEffectLoader&)=delete;
 	void operator=(const RelicEffectLoader&)=delete;
@@ -75,5 +76,7 @@ public:
 	std::shared_ptr<RelicEffect> getEffect(const std::string&);
 	//检查是否存在某效果
 	bool isEffectLoaded(const std::string& id)const;
+private:
+	std::unordered_map<std::string, std::shared_ptr<RelicEffectFactory>> factories;	
 };
 #endif
