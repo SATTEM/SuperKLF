@@ -7,8 +7,8 @@
     "cost":50
   },
   {
-    "name": "跑操",
-    "description": "锻炼身体(?):HP+50",
+    "name": "身体素质训练",
+    "description": "HP+50",
     "icon_path": "./res/image/health_boost.png",
     "effectID": "health_boost",
     "cost":50
